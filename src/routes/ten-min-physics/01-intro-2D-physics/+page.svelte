@@ -115,6 +115,10 @@
 	})
 </script>
 
+<svelte:head>
+	<title>01 - Introduction to 2d web browser physics</title>
+</svelte:head>
+
 <h1 class="mb-4 text-2xl font-bold">01 - Introduction to 2d web browser physics</h1>
 
 <div class="grid grid-cols-2 gap-4">

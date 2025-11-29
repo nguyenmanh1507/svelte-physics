@@ -44,6 +44,14 @@
 								01 - Introduction to 2d web browser physics
 							</a>
 						</li>
+						<li>
+							<a
+								href={resolve('/ten-min-physics/02-cannon-3D')}
+								class={activeClass('/ten-min-physics/02-cannon-3D')}
+							>
+								02 - Cannon 3D
+							</a>
+						</li>
 					</ul>
 				</details>
 			</li>
