@@ -26,7 +26,7 @@
 		const cScale = Math.min(canvas.width, canvas.height) / simMinWidth
 		// Calculate simulation space dimensions in simulation units
 		const simWidth = canvas.width / cScale
-		const simHeight = canvas.height / cScale
+		// const simHeight = canvas.height / cScale
 
 		// Type definition for 2D vector (position or velocity)
 		type Vec2 = { x: number; y: number }
