@@ -39,6 +39,7 @@
 		"@vitest/browser-playwright": "^4.0.13",
 		"bits-ui": "^2.14.4",
 		"clsx": "^2.1.1",
+		"daisyui": "^5.5.5",
 		"eslint": "^9.39.1",
 		"eslint-config-prettier": "^10.1.8",
 		"eslint-plugin-storybook": "^10.0.8",
@@ -63,6 +64,7 @@
 	},
 	"dependencies": {
 		"@threlte/core": "^8.3.0",
+		"@threlte/extras": "^9.7.1",
 		"three": "^0.181.2"
 	}
 }

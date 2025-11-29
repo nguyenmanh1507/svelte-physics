@@ -1,6 +1,7 @@
 <script lang="ts">
 	import './layout.css'
 	import favicon from '$lib/assets/favicon.svg'
+	import { resolve } from '$app/paths'
 
 	let { children } = $props()
 </script>
@@ -12,13 +13,13 @@
 
 <div class="navbar bg-neutral text-neutral-content shadow-sm">
 	<div class="flex-1">
-		<a href="/" class="btn btn-ghost text-xl">daisyUI</a>
+		<a href={resolve('/')} class="btn btn-ghost text-xl">Svelte Physics</a>
 	</div>
 	<div class="flex-none">
 		<ul class="menu menu-horizontal px-1">
-			<li><a href="/" class="link">Home</a></li>
-			<li><a href="/threlte" class="link" data-sveltekit-preload-data>Threlte</a></li>
-			<li>
+			<li><a href={resolve('/')} class="link">Home</a></li>
+			<li><a href={resolve('/threlte')} class="link" data-sveltekit-preload-data>Threlte</a></li>
+			<!-- <li>
 				<details>
 					<summary>About</summary>
 					<ul class="bg-neutral rounded-t-none p-2">
@@ -26,7 +27,7 @@
 						<li><a href="/contact" class="link">Contact</a></li>
 					</ul>
 				</details>
-			</li>
+			</li> -->
 		</ul>
 	</div>
 </div>
