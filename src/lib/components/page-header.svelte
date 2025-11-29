@@ -33,19 +33,17 @@
 				</a>
 			</li>
 			<li>
-				<a href={resolve('/ten-min-physics')} class={activeClass('/ten-min-physics')}>
-					Ten Minute Physics
-				</a>
-			</li>
-			<!-- <li>
 				<details>
-					<summary>About</summary>
+					<summary>Ten Minute Physics</summary>
 					<ul class="bg-neutral rounded-t-none p-2">
-						<li><a href="/about" class="link">About</a></li>
-						<li><a href="/contact" class="link">Contact</a></li>
+						<li>
+							<a href={resolve('/ten-min-physics')} class={activeClass('/ten-min-physics')}>
+								01 - Introduction to 2d web browser physics
+							</a>
+						</li>
 					</ul>
 				</details>
-			</li> -->
+			</li>
 		</ul>
 	</div>
 </div>
