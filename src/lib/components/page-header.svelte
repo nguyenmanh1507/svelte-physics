@@ -37,7 +37,10 @@
 					<summary>Ten Minute Physics</summary>
 					<ul class="bg-neutral rounded-t-none p-2">
 						<li>
-							<a href={resolve('/ten-min-physics')} class={activeClass('/ten-min-physics')}>
+							<a
+								href={resolve('/ten-min-physics/01-intro-2D-physics')}
+								class={activeClass('/ten-min-physics/01-intro-2D-physics')}
+							>
 								01 - Introduction to 2d web browser physics
 							</a>
 						</li>
