@@ -52,6 +52,14 @@
 								02 - Cannon 3D
 							</a>
 						</li>
+						<li>
+							<a
+								href={resolve('/ten-min-physics/03-billiard')}
+								class={activeClass('/ten-min-physics/03-billiard')}
+							>
+								03 - Billiards
+							</a>
+						</li>
 					</ul>
 				</details>
 			</li>
