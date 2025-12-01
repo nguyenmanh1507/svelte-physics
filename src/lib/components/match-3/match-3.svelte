@@ -1,14 +1,15 @@
 <script lang="ts">
 	import { onMount } from 'svelte'
-	import kaplay from 'kaplay'
+	import { initGame } from './game'
 
 	let canvasRef: HTMLCanvasElement | undefined
 
 	onMount(() => {
-		kaplay({
-			canvas: canvasRef,
-		})
+		if (!canvasRef) return
+		initGame(canvasRef)
 	})
 </script>
 
-<canvas bind:this={canvasRef} class="aspect-video w-full rounded border"></canvas>
+<div class="mx-auto h-[768px] w-[1024px]">
+	<canvas bind:this={canvasRef} class="rounded border"></canvas>
+</div>
