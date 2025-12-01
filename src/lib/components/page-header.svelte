@@ -63,6 +63,18 @@
 					</ul>
 				</details>
 			</li>
+			<li>
+				<details>
+					<summary>Games</summary>
+					<ul class="bg-neutral rounded-t-none p-2">
+						<li>
+							<a href={resolve('/games/match-3')} class={activeClass('/games/match-3')}>
+								Match 3
+							</a>
+						</li>
+					</ul>
+				</details>
+			</li>
 		</ul>
 	</div>
 </div>

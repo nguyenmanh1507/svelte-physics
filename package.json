@@ -67,6 +67,7 @@
 	"dependencies": {
 		"@threlte/core": "^8.3.0",
 		"@threlte/extras": "^9.7.1",
+		"kaplay": "^3001.0.19",
 		"prismjs": "^1.30.0",
 		"three": "^0.181.2"
 	}
