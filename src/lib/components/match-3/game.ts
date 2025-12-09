@@ -1,8 +1,9 @@
-import kaplay from 'kaplay'
 import backgroundUrl from './assets/background.png?url'
 import backgroundBlurUrl from './assets/background_blur.png?url'
 import candiesUrl from './assets/assets_candy.png?url'
 import explosionUrl from './assets/explosion.png?url'
+
+import kaplay from 'kaplay'
 
 export function initGame(canvas: HTMLCanvasElement) {
 	const game = kaplay({
@@ -101,11 +102,18 @@ export function initGame(canvas: HTMLCanvasElement) {
 			const colDiff = Math.abs(targetGrid.col - draggedFromPos.col)
 			const rowDiff = Math.abs(targetGrid.row - draggedFromPos.row)
 			const isAdjacent = (colDiff === 1 && rowDiff === 0) || (colDiff === 0 && rowDiff === 1)
-			const isValid = targetGrid.col >= 0 && targetGrid.col < GRID_WIDTH &&
-				targetGrid.row >= 0 && targetGrid.row < GRID_HEIGHT &&
+			const isValid =
+				targetGrid.col >= 0 &&
+				targetGrid.col < GRID_WIDTH &&
+				targetGrid.row >= 0 &&
+				targetGrid.row < GRID_HEIGHT &&
 				isAdjacent
 
-			if (isValid && candyGrid[targetGrid.row] && candyGrid[targetGrid.row][targetGrid.col] !== draggedCandy) {
+			if (
+				isValid &&
+				candyGrid[targetGrid.row] &&
+				candyGrid[targetGrid.row][targetGrid.col] !== draggedCandy
+			) {
 				// Swap candies
 				const targetCandy = candyGrid[targetGrid.row][targetGrid.col]
 				if (targetCandy) {
@@ -165,29 +173,20 @@ export function initGame(canvas: HTMLCanvasElement) {
 
 			// Animate to new position
 			const targetPos = gridToPos(col, row)
-			game.tween(
-				candy.pos,
-				targetPos,
-				0.2,
-				(p) => candy.pos = p,
-				game.easings.easeOutQuad
-			)
+			game.tween(candy.pos, targetPos, 0.2, (p) => (candy.pos = p), game.easings.easeOutQuad)
 		}
 
 		function returnToGrid(candy: ReturnType<typeof createCandy>, col: number, row: number) {
 			const targetPos = gridToPos(col, row)
-			game.tween(
-				candy.pos,
-				targetPos,
-				0.2,
-				(p) => candy.pos = p,
-				game.easings.easeOutQuad
-			)
+			game.tween(candy.pos, targetPos, 0.2, (p) => (candy.pos = p), game.easings.easeOutQuad)
 			candy.gridCol = col
 			candy.gridRow = row
 		}
 
-		function swapCandies(candy1: ReturnType<typeof createCandy>, candy2: ReturnType<typeof createCandy>) {
+		function swapCandies(
+			candy1: ReturnType<typeof createCandy>,
+			candy2: ReturnType<typeof createCandy>
+		) {
 			const pos1 = { col: candy1.gridCol, row: candy1.gridRow }
 			const pos2 = { col: candy2.gridCol, row: candy2.gridRow }
 
@@ -205,21 +204,9 @@ export function initGame(canvas: HTMLCanvasElement) {
 			const targetPos1 = gridToPos(pos2.col, pos2.row)
 			const targetPos2 = gridToPos(pos1.col, pos1.row)
 
-			game.tween(
-				candy1.pos,
-				targetPos1,
-				0.2,
-				(p) => candy1.pos = p,
-				game.easings.easeOutQuad
-			)
+			game.tween(candy1.pos, targetPos1, 0.2, (p) => (candy1.pos = p), game.easings.easeOutQuad)
 
-			game.tween(
-				candy2.pos,
-				targetPos2,
-				0.2,
-				(p) => candy2.pos = p,
-				game.easings.easeOutQuad
-			)
+			game.tween(candy2.pos, targetPos2, 0.2, (p) => (candy2.pos = p), game.easings.easeOutQuad)
 
 			console.log(`Swapped candies: (${pos1.col}, ${pos1.row}) <-> (${pos2.col}, ${pos2.row})`)
 		}
