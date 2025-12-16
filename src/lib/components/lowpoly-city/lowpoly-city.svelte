@@ -1,6 +1,17 @@
 <script lang="ts">
-	import { T } from '@threlte/core'
-	import { OrbitControls } from '@threlte/extras'
+	import { T, useThrelte } from '@threlte/core'
+	import { OrbitControls, Sky } from '@threlte/extras'
+	import MyPostProcessing from './post-processing.svelte'
+
+	type SkyProps = {
+		turbidity?: number
+		rayleigh?: number
+		azimuth?: number
+		elevation?: number
+		mieCoefficient?: number
+		mieDirectionalG?: number
+		exposure?: number
+	}
 
 	type CommonPrimitiveProps = {
 		id: string
@@ -173,24 +184,53 @@
 	}
 
 	const primitives = createCity(1337)
+
+	const skyPresets: Record<string, SkyProps> = {
+		sunset: {
+			turbidity: 10,
+			rayleigh: 3,
+			azimuth: 180,
+			elevation: 0.5,
+			mieCoefficient: 0.005,
+			mieDirectionalG: 0.7,
+			exposure: 0.37,
+		},
+	}
+
+	const { renderer } = useThrelte()
+
+	$effect(() => {
+		renderer.toneMappingExposure = skyPresets.sunset.exposure ?? 1
+	})
 </script>
 
 <!-- Camera -->
 <T.PerspectiveCamera
 	makeDefault
-	position={[10, 8, 10]}
+	position={[9.789971878149387, 7.175621844492351, 17.97302849044365]}
+	rotation={[-0.2166232546502222, 0.3839188671321518, 0.08224522399518391]}
+	quaternion={[-0.0982274067492897, 0.19386684911842672, 0.019513252806094054, 0.9759027893909967]}
 	oncreate={(ref) => {
 		ref.lookAt(0, 2, 0)
 	}}
 >
 	<!-- Interactive camera controls (rotate / pan / zoom) -->
-	<OrbitControls enableDamping dampingFactor={0.08} maxPolarAngle={Math.PI / 2 - 0.05} />
+	<OrbitControls
+		enableDamping
+		dampingFactor={0.08}
+		maxPolarAngle={Math.PI / 2 - 0.05}
+		target={[0, 2, 0]}
+	/>
 </T.PerspectiveCamera>
 
+<MyPostProcessing />
+
+<!-- Sky / Environment -->
+<Sky {...skyPresets.sunset} />
+
 <!-- Lighting -->
-<T.AmbientLight intensity={0.4} />
-<T.DirectionalLight position={[5, 10, 5]} intensity={0.8} castShadow />
-<T.DirectionalLight position={[-5, 5, -5]} intensity={0.3} />
+<T.AmbientLight intensity={0.2} />
+<T.DirectionalLight position={[0, 5, -5]} intensity={0.5} castShadow />
 
 <!-- Ground Plane -->
 <T.Mesh rotation.x={-Math.PI / 2} position.y={0} receiveShadow>

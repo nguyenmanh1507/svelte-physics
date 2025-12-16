@@ -68,6 +68,7 @@
 		"@threlte/core": "^8.3.1",
 		"@threlte/extras": "^9.7.1",
 		"kaplay": "^3001.0.19",
+		"postprocessing": "^6.38.1",
 		"prismjs": "^1.30.0",
 		"three": "^0.181.2"
 	}
