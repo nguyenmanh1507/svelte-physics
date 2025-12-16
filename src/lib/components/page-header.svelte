@@ -4,6 +4,68 @@
 
 	import { cn } from '$lib/utils/tailwind'
 
+	// Menu item types
+	type MenuLink = {
+		label: string
+		href: string
+		preloadData?: boolean
+	}
+
+	type MenuDropdown = {
+		label: string
+		children: MenuLink[]
+	}
+
+	type MenuItem = MenuLink | MenuDropdown
+
+	function isMenuDropdown(item: MenuItem): item is MenuDropdown {
+		return 'children' in item
+	}
+
+	// Menu configuration
+	const menuItems: MenuItem[] = [
+		{
+			label: 'Home',
+			href: '/',
+		},
+		{
+			label: 'Threlte',
+			children: [
+				{
+					label: 'Introduction',
+					href: '/threlte/introduction',
+					preloadData: true,
+				},
+			],
+		},
+		{
+			label: 'Ten Minute Physics',
+			children: [
+				{
+					label: '01 - Introduction to 2d web browser physics',
+					href: '/ten-min-physics/01-intro-2D-physics',
+				},
+				{
+					label: '02 - Cannon 3D',
+					href: '/ten-min-physics/02-cannon-3D',
+				},
+				{
+					label: '03 - Billiards',
+					href: '/ten-min-physics/03-billiard',
+				},
+			],
+		},
+		{
+			label: 'Games',
+			children: [
+				{
+					label: 'Match 3',
+					href: '/games/match-3',
+				},
+			],
+		},
+	]
+
 	// Helper function to check if a path is active
 	function isActive(path: string): boolean {
 		const current = page.url.pathname
@@ -16,6 +78,11 @@
 	function activeClass(path: string): string {
 		return cn('link font-bold', isActive(path) && 'text-green-300')
 	}
+
+	// Helper to resolve paths with type assertion for dynamic routes
+	function resolvePath(path: string): string {
+		return resolve(path as any)
+	}
 </script>
 
 <div class="navbar bg-neutral text-neutral-content shadow-sm">
@@ -24,57 +91,32 @@
 	</div>
 	<div class="flex-none">
 		<ul class="menu menu-horizontal px-1">
-			<li>
-				<a href={resolve('/')} class={activeClass('/')}> Home </a>
-			</li>
-			<li>
-				<a href={resolve('/threlte')} class={activeClass('/threlte')} data-sveltekit-preload-data>
-					Threlte
-				</a>
-			</li>
-			<li>
-				<details>
-					<summary>Ten Minute Physics</summary>
-					<ul class="bg-neutral rounded-t-none p-2">
-						<li>
-							<a
-								href={resolve('/ten-min-physics/01-intro-2D-physics')}
-								class={activeClass('/ten-min-physics/01-intro-2D-physics')}
-							>
-								01 - Introduction to 2d web browser physics
-							</a>
-						</li>
-						<li>
-							<a
-								href={resolve('/ten-min-physics/02-cannon-3D')}
-								class={activeClass('/ten-min-physics/02-cannon-3D')}
-							>
-								02 - Cannon 3D
-							</a>
-						</li>
-						<li>
-							<a
-								href={resolve('/ten-min-physics/03-billiard')}
-								class={activeClass('/ten-min-physics/03-billiard')}
-							>
-								03 - Billiards
-							</a>
-						</li>
-					</ul>
-				</details>
-			</li>
-			<li>
-				<details>
-					<summary>Games</summary>
-					<ul class="bg-neutral rounded-t-none p-2">
-						<li>
-							<a href={resolve('/games/match-3')} class={activeClass('/games/match-3')}>
-								Match 3
-							</a>
-						</li>
-					</ul>
-				</details>
-			</li>
+			{#each menuItems as item}
+				<li>
+					{#if isMenuDropdown(item)}
+						<details>
+							<summary>{item.label}</summary>
+							<ul class="bg-neutral rounded-t-none p-2">
+								{#each item.children as child}
+									<li>
+										<a href={resolvePath(child.href)} class={activeClass(child.href)}>
+											{child.label}
+										</a>
+									</li>
+								{/each}
+							</ul>
+						</details>
+					{:else}
+						<a
+							href={resolvePath(item.href)}
+							class={activeClass(item.href)}
+							data-sveltekit-preload-data={item.preloadData || undefined}
+						>
+							{item.label}
+						</a>
+					{/if}
+				</li>
+			{/each}
 		</ul>
 	</div>
 </div>
