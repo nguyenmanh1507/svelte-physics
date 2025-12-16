@@ -36,6 +36,11 @@
 					href: '/threlte/introduction',
 					preloadData: true,
 				},
+				{
+					label: 'Postprocessing',
+					href: '/threlte/postprocessing',
+					preloadData: true,
+				},
 			],
 		},
 		{
