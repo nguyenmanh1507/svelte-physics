@@ -13,9 +13,10 @@
 		"format": "prettier --write .",
 		"lint": "prettier --check . && eslint .",
 		"test:unit": "vitest",
-		"test": "npm run test:unit -- --run",
+		"test": "npm run test:unit -- --run && npm run test:e2e",
 		"storybook": "storybook dev -p 6006",
-		"build-storybook": "storybook build"
+		"build-storybook": "storybook build",
+		"test:e2e": "playwright test"
 	},
 	"devDependencies": {
 		"@chromatic-com/storybook": "^4.1.3",

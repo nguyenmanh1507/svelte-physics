@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { T, useThrelte } from '@threlte/core'
 	import { OrbitControls, Sky } from '@threlte/extras'
+	import { GLTF } from '@threlte/extras'
+
 	import MyPostProcessing from './post-processing.svelte'
 
 	type SkyProps = {
