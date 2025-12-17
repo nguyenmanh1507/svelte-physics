@@ -90,7 +90,7 @@
 	}
 </script>
 
-<div class="navbar bg-neutral text-neutral-content z-10 shadow-sm">
+<nav class="navbar bg-neutral text-neutral-content z-10 shadow-sm">
 	<div class="flex-1">
 		<a href={resolve('/')} class="btn btn-ghost text-xl">Svelte Physics</a>
 	</div>
@@ -124,4 +124,4 @@
 			{/each}
 		</ul>
 	</div>
-</div>
+</nav>
