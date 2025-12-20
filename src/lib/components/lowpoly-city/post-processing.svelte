@@ -11,45 +11,91 @@
 		KernelSize,
 		GlitchEffect,
 		DotScreenEffect,
+		GlitchMode,
+		ChromaticAberrationEffect,
 	} from 'postprocessing'
-	import type { Camera } from 'three'
+	import { Vector2, type Camera } from 'three'
+	import { Pane, Checkbox } from 'svelte-tweakpane-ui'
 
 	const { scene, renderer, camera, size, autoRender, renderStage } = useThrelte()
 
 	const composer = new EffectComposer(renderer)
 
-	const setupEffectComposer = (camera: Camera) => {
-		composer.removeAllPasses()
-		composer.addPass(new RenderPass(scene, camera))
-		// composer.addPass(
-		// 	new EffectPass(
-		// 		camera,
-		// 		new BloomEffect({
-		// 			intensity: 1,
-		// 			luminanceThreshold: 0.15,
-		// 			height: 512,
-		// 			width: 512,
-		// 			luminanceSmoothing: 0.08,
-		// 			mipmapBlur: true,
-		// 			kernelSize: KernelSize.MEDIUM,
-		// 		})
-		// 	)
-		// )
-		// composer.addPass(
-		// 	new EffectPass(
-		// 		camera,
-		// 		new SMAAEffect({
-		// 			preset: SMAAPreset.LOW,
-		// 		})
-		// 	)
-		// )
+	// Effect state toggles
+	let enabledPostprocessing = $state(true)
+	let enabledBloom = $state(false)
+	let enabledSMAA = $state(true)
+	let enabledDotScreen = $state(false)
+	let enabledGlitch = $state(false)
+	let enabledRGBShift = $state(true)
 
-		// Dot screen effect
-		composer.addPass(new EffectPass(camera, new DotScreenEffect()))
+	// Effects
+	const bloomEffect = new BloomEffect({
+		intensity: 1,
+		luminanceThreshold: 0.15,
+		height: 512,
+		width: 512,
+		luminanceSmoothing: 0.08,
+		mipmapBlur: true,
+		kernelSize: KernelSize.MEDIUM,
+	})
+	const smaaEffect = new SMAAEffect({
+		preset: SMAAPreset.LOW,
+	})
+	const dotScreenEffect = new DotScreenEffect()
+	const glitchEffect = new GlitchEffect()
+	const chromaticAberrationEffect = new ChromaticAberrationEffect({
+		offset: new Vector2(0.002, 0.001),
+		radialModulation: false,
+		modulationOffset: 0.5,
+	})
+	type EffectToggleConfig = {
+		bloom: boolean
+		smaa: boolean
+		dotScreen: boolean
+		glitch: boolean
+		rgbShift: boolean
 	}
 
+	const setupEffectComposer = (camera: Camera, config: EffectToggleConfig) => {
+		composer.removeAllPasses()
+		composer.addPass(new RenderPass(scene, camera))
+
+		if (config.bloom) {
+			composer.addPass(new EffectPass(camera, bloomEffect))
+		}
+		if (config.smaa) {
+			composer.addPass(new EffectPass(camera, smaaEffect))
+		}
+		if (config.dotScreen) {
+			composer.addPass(new EffectPass(camera, dotScreenEffect))
+		}
+		if (config.glitch) {
+			glitchEffect.mode = GlitchMode.CONSTANT_WILD
+			composer.addPass(new EffectPass(camera, glitchEffect))
+		}
+		if (config.rgbShift) {
+			composer.addPass(new EffectPass(camera, chromaticAberrationEffect))
+		}
+	}
+
+	// Rebuild composer when camera/effect toggles change.
+	// NOTE: `camera.current` may be undefined early during init, so guard it.
 	$effect(() => {
-		setupEffectComposer(camera.current)
+		const currentCamera = camera.current
+		if (!currentCamera) return
+
+		// Only rebuild the postprocessing pipeline when it's enabled.
+		// When disabled we bypass the composer entirely in the render loop.
+		if (enabledPostprocessing) {
+			setupEffectComposer(currentCamera, {
+				bloom: enabledBloom,
+				smaa: enabledSMAA,
+				dotScreen: enabledDotScreen,
+				glitch: enabledGlitch,
+				rgbShift: enabledRGBShift,
+			})
+		}
 	})
 
 	$effect(() => {
@@ -86,8 +132,24 @@
 
 	useTask(
 		(delta) => {
-			composer.render(delta)
+			const currentCamera = camera.current
+			if (!currentCamera) return
+
+			if (enabledPostprocessing) {
+				composer.render(delta)
+			} else {
+				renderer.render(scene, currentCamera)
+			}
 		},
 		{ stage: renderStage, autoInvalidate: false }
 	)
 </script>
+
+<Pane title="Post Processing Effects" position="fixed" y={80}>
+	<Checkbox label="Enabled" bind:value={enabledPostprocessing} />
+	<Checkbox label="Bloom" bind:value={enabledBloom} />
+	<Checkbox label="SMAA" bind:value={enabledSMAA} />
+	<Checkbox label="Dot Screen" bind:value={enabledDotScreen} />
+	<Checkbox label="Glitch" bind:value={enabledGlitch} />
+	<Checkbox label="Chromatic Aberration" bind:value={enabledRGBShift} />
+</Pane>

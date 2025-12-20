@@ -73,6 +73,7 @@
 		"kaplay": "^3001.0.19",
 		"postprocessing": "^6.38.1",
 		"prismjs": "^1.30.0",
+		"svelte-tweakpane-ui": "^1.5.12",
 		"three": "^0.182.0"
 	},
 	"engines": {
