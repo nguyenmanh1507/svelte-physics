@@ -9,6 +9,8 @@
 		SMAAPreset,
 		BloomEffect,
 		KernelSize,
+		GlitchEffect,
+		DotScreenEffect,
 	} from 'postprocessing'
 	import type { Camera } from 'three'
 
@@ -19,28 +21,31 @@
 	const setupEffectComposer = (camera: Camera) => {
 		composer.removeAllPasses()
 		composer.addPass(new RenderPass(scene, camera))
-		composer.addPass(
-			new EffectPass(
-				camera,
-				new BloomEffect({
-					intensity: 1,
-					luminanceThreshold: 0.15,
-					height: 512,
-					width: 512,
-					luminanceSmoothing: 0.08,
-					mipmapBlur: true,
-					kernelSize: KernelSize.MEDIUM,
-				})
-			)
-		)
-		composer.addPass(
-			new EffectPass(
-				camera,
-				new SMAAEffect({
-					preset: SMAAPreset.LOW,
-				})
-			)
-		)
+		// composer.addPass(
+		// 	new EffectPass(
+		// 		camera,
+		// 		new BloomEffect({
+		// 			intensity: 1,
+		// 			luminanceThreshold: 0.15,
+		// 			height: 512,
+		// 			width: 512,
+		// 			luminanceSmoothing: 0.08,
+		// 			mipmapBlur: true,
+		// 			kernelSize: KernelSize.MEDIUM,
+		// 		})
+		// 	)
+		// )
+		// composer.addPass(
+		// 	new EffectPass(
+		// 		camera,
+		// 		new SMAAEffect({
+		// 			preset: SMAAPreset.LOW,
+		// 		})
+		// 	)
+		// )
+
+		// Dot screen effect
+		composer.addPass(new EffectPass(camera, new DotScreenEffect()))
 	}
 
 	$effect(() => {
@@ -68,7 +73,7 @@
 				camera.current.quaternion.x,
 				camera.current.quaternion.y,
 				camera.current.quaternion.z,
-				camera.current.quaternion.w
+				camera.current.quaternion.w,
 			])
 		}
 
