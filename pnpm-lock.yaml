@@ -14,6 +14,9 @@ importers:
       '@threlte/extras':
         specifier: ^9.7.1
         version: 9.7.1(@types/three@0.182.0)(svelte@5.46.0)(three@0.182.0)
+      jolt-physics:
+        specifier: ^0.39.0
+        version: 0.39.0
       kaplay:
         specifier: ^3001.0.19
         version: 3001.0.19
@@ -23,6 +26,9 @@ importers:
       prismjs:
         specifier: ^1.30.0
         version: 1.30.0
+      stats.js:
+        specifier: ^0.17.0
+        version: 0.17.0
       svelte-tweakpane-ui:
         specifier: ^1.5.12
         version: 1.5.12(svelte@5.46.0)
@@ -87,6 +93,9 @@ importers:
       '@types/prismjs':
         specifier: ^1.26.5
         version: 1.26.5
+      '@types/stats.js':
+        specifier: ^0.17.4
+        version: 0.17.4
       '@types/three':
         specifier: ^0.182.0
         version: 0.182.0
@@ -1875,6 +1884,9 @@ packages:
     resolution: {integrity: sha512-ekilCSN1jwRvIbgeg/57YFh8qQDNbwDb9xT/qu2DAHbFFZUicIl4ygVaAvzveMhMVr3LnpSKTNnwt8PoOfmKhQ==}
     hasBin: true
 
+  jolt-physics@0.39.0:
+    resolution: {integrity: sha512-tE7NZc7Y3Y9B/m/oBP+M8jWUim7HcZ93FiDrkPsK/DbXLAisw8z5h1xFw825uy+8Okor7HkFanWfwl6Tjfe5pA==}
+
   js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
 
@@ -2495,6 +2507,9 @@ packages:
 
   stackback@0.0.2:
     resolution: {integrity: sha512-1XMJE5fQo1jGH6Y/7ebnwPOBEkIEnT4QF32d5R1+VXdXveM0IBMJt8zfaxX1P3QhVwrYe+576+jkANtSS2mBbw==}
+
+  stats.js@0.17.0:
+    resolution: {integrity: sha512-hNKz8phvYLPEcRkeG1rsGmV5ChMjKDAWU7/OJJdDErPBNChQXxCo3WZurGpnWc6gZhAzEPFad1aVgyOANH1sMw==}
 
   std-env@3.10.0:
     resolution: {integrity: sha512-5GS12FdOZNliM5mAOxFRg7Ir0pWz8MdpYm6AY6VPkGpbA7ZzmbzNcBJQ0GPvvyWgcY7QAhCgf9Uy89I03faLkg==}
@@ -4522,6 +4537,8 @@ snapshots:
 
   jiti@2.6.1: {}
 
+  jolt-physics@0.39.0: {}
+
   js-tokens@4.0.0: {}
 
   js-yaml@4.1.1:
@@ -5091,6 +5108,8 @@ snapshots:
   source-map@0.6.1: {}
 
   stackback@0.0.2: {}
+
+  stats.js@0.17.0: {}
 
   std-env@3.10.0: {}
 

@@ -61,6 +61,15 @@
 			],
 		},
 		{
+			label: 'Jolt Physics',
+			children: [
+				{
+					label: 'Example',
+					href: '/jolt-physics/example',
+				},
+			],
+		},
+		{
 			label: 'Games',
 			children: [
 				{

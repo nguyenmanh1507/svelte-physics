@@ -38,6 +38,7 @@
 		"@tailwindcss/vite": "^4.1.18",
 		"@types/node": "^24.1.0",
 		"@types/prismjs": "^1.26.5",
+		"@types/stats.js": "^0.17.4",
 		"@types/three": "^0.182.0",
 		"@vitest/browser-playwright": "^4.0.16",
 		"bits-ui": "^2.14.4",
@@ -70,9 +71,11 @@
 	"dependencies": {
 		"@threlte/core": "^8.3.1",
 		"@threlte/extras": "^9.7.1",
+		"jolt-physics": "^0.39.0",
 		"kaplay": "^3001.0.19",
 		"postprocessing": "^6.38.1",
 		"prismjs": "^1.30.0",
+		"stats.js": "^0.17.0",
 		"svelte-tweakpane-ui": "^1.5.12",
 		"three": "^0.182.0"
 	},

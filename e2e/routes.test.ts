@@ -44,6 +44,11 @@ const routes = [
 		title: 'Match 3',
 		description: 'Match 3 game page',
 	},
+	{
+		path: '/jolt-physics/example',
+		title: 'Svelte Physics',
+		description: 'Jolt Physics - Example page',
+	},
 ] as const
 
 for (const route of routes) {
