@@ -1,1 +1,1 @@
-export { default as Stats } from './Stats.svelte'
+export { default as Stats } from './stats.svelte'
