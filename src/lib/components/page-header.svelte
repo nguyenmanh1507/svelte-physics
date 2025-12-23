@@ -1,8 +1,9 @@
 <script lang="ts">
 	import { resolve } from '$app/paths'
 	import { page } from '$app/state'
-
 	import { cn } from '$lib/utils/tailwind'
+	import * as NavigationMenu from '$lib/components/ui/navigation-menu/index.js'
+	import type { HTMLAttributes } from 'svelte/elements'
 
 	// Menu item types
 	type MenuLink = {
@@ -97,40 +98,59 @@
 	function resolvePath(path: string): string {
 		return resolve(path as any)
 	}
+
+	type ListItemProps = HTMLAttributes<HTMLAnchorElement> & {
+		title: string
+		href: string
+	}
 </script>
 
-<nav class="navbar bg-neutral text-neutral-content z-10 shadow-sm">
-	<div class="flex-1">
-		<a href={resolve('/')} class="btn btn-ghost text-xl">Svelte Physics</a>
-	</div>
-	<div class="flex-none">
-		<ul class="menu menu-horizontal px-1">
+{#snippet ListItem({ title, href, class: className, ...restProps }: ListItemProps)}
+	<li>
+		<NavigationMenu.Link class="p-0">
+			{#snippet children()}
+				<a
+					href={resolvePath(href)}
+					class={cn(
+						'hover:bg-neutral focus:bg-neutral block space-y-1 p-3 leading-none no-underline transition-colors outline-none select-none hover:text-white focus:text-white',
+						className
+					)}
+					{...restProps}
+				>
+					<div class="text-sm leading-none font-medium">{title}</div>
+				</a>
+			{/snippet}
+		</NavigationMenu.Link>
+	</li>
+{/snippet}
+
+<div class="navbar bg-neutral text-neutral-content z-10 flex justify-center shadow-sm">
+	<NavigationMenu.Root viewport={false}>
+		<NavigationMenu.List class="flex-wrap">
 			{#each menuItems as item}
-				<li>
+				<NavigationMenu.Item>
 					{#if isMenuDropdown(item)}
-						<details>
-							<summary>{item.label}</summary>
-							<ul class="bg-neutral rounded-t-none p-2">
-								{#each item.children as child}
-									<li>
-										<a href={resolvePath(child.href)} class={activeClass(child.href)}>
-											{child.label}
-										</a>
-									</li>
+						<NavigationMenu.Trigger class="bg-transparent">{item.label}</NavigationMenu.Trigger>
+					{:else}
+						<NavigationMenu.Link href={resolvePath(item.href)}>
+							{item.label}
+						</NavigationMenu.Link>
+					{/if}
+
+					{#if isMenuDropdown(item)}
+						<NavigationMenu.Content class="p-0">
+							<ul class="min-w-[200px]">
+								{#each item.children as child, i (i)}
+									{@render ListItem({
+										href: child.href,
+										title: child.label,
+									})}
 								{/each}
 							</ul>
-						</details>
-					{:else}
-						<a
-							href={resolvePath(item.href)}
-							class={activeClass(item.href)}
-							data-sveltekit-preload-data={item.preloadData || undefined}
-						>
-							{item.label}
-						</a>
+						</NavigationMenu.Content>
 					{/if}
-				</li>
+				</NavigationMenu.Item>
 			{/each}
-		</ul>
-	</div>
-</nav>
+		</NavigationMenu.List>
+	</NavigationMenu.Root>
+</div>
