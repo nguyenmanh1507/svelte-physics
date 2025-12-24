@@ -39,6 +39,8 @@
 		return () => {
 			cancelAnimationFrame(raf)
 			statsFPS.dom.remove()
+			statsRenderTime.dom.remove()
+			statsMemory.dom.remove()
 		}
 	})
 </script>
