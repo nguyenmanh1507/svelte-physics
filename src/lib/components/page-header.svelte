@@ -65,6 +65,10 @@
 			label: 'Jolt Physics',
 			children: [
 				{
+					label: 'Simple',
+					href: '/jolt-physics/simple',
+				},
+				{
 					label: 'Example',
 					href: '/jolt-physics/example',
 				},
