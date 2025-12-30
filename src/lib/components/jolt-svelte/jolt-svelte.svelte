@@ -215,8 +215,14 @@
 		renderer.render(scene, camera)
 	}
 
+	let isMounted = false
+
 	onMount(() => {
+		isMounted = true
+
 		initJolt().then((Jolt) => {
+			if (!isMounted) return
+
 			initPhysics(Jolt)
 			initGraphics()
 
@@ -239,6 +245,7 @@
 		})
 
 		return () => {
+			isMounted = false
 			removeEventListener('resize', onResize)
 			cancelAnimationFrame(rafId)
 		}
