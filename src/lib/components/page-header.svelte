@@ -72,6 +72,10 @@
 					label: 'Example',
 					href: '/jolt-physics/example',
 				},
+				{
+					label: 'Integrate to Threlte',
+					href: '/jolt-physics/integrate-to-threlte',
+				},
 			],
 		},
 		{

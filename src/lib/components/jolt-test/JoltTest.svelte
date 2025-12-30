@@ -85,7 +85,12 @@
 		container.appendChild(renderer.domElement)
 
 		// Create camera
-		camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000)
+		camera = new THREE.PerspectiveCamera(
+			60,
+			container.clientWidth / container.clientHeight,
+			0.1,
+			1000
+		)
 		camera.position.set(15, 15, 15)
 		camera.lookAt(0, 0, 0)
 
@@ -298,11 +303,12 @@
 		</button>
 	</div>
 
-	<div bind:this={container} class="h-[600px] w-full overflow-hidden rounded-lg border border-gray-700">
-	</div>
+	<div
+		bind:this={container}
+		class="h-[600px] w-full overflow-hidden rounded-lg border border-gray-700"
+	></div>
 
 	<p class="text-sm text-gray-400">
 		Click "Drop Object" to spawn falling spheres and boxes. Use mouse to orbit the camera.
 	</p>
 </div>
-

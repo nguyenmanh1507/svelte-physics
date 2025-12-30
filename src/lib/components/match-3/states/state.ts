@@ -38,7 +38,9 @@ export class GamePiece {
 	 * to transition to a different state.
 	 */
 	public transitionTo(state: PieceState): void {
-		console.log(`[${this.color} piece at (${this.x},${this.y})] Transitioning to: ${state.constructor.name}`)
+		console.log(
+			`[${this.color} piece at (${this.x},${this.y})] Transitioning to: ${state.constructor.name}`
+		)
 		this.state = state
 		this.state.setPiece(this)
 	}
