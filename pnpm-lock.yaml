@@ -20,6 +20,9 @@ importers:
       kaplay:
         specifier: ^3001.0.19
         version: 3001.0.19
+      littlejsengine:
+        specifier: ^1.17.11
+        version: 1.17.11
       postprocessing:
         specifier: ^6.38.1
         version: 6.38.1(three@0.182.0)
@@ -1997,6 +2000,9 @@ packages:
   lilconfig@2.1.0:
     resolution: {integrity: sha512-utWOt/GHzuUxnLKxB6dk81RoOeoNeHgbrXiuGk4yyF5qlRz+iIVWu56E2fqGHFrXz0QNUhLB/8nKqvRH66JKGQ==}
     engines: {node: '>=10'}
+
+  littlejsengine@1.17.11:
+    resolution: {integrity: sha512-Nxduei8FJw3XmGbSlRoMh5Pa8xI+pV4n6LU+dp7vQlu/m0Z7vx/l941DsPguRxjPGb00+T/+wVqG9dYEw2OYPw==}
 
   locate-character@3.0.0:
     resolution: {integrity: sha512-SW13ws7BjaeJ6p7Q6CO2nchbYEc3X3J6WrmTTDto7yMPqVSZTUyY5Tjbid+Ab8gLnATtygYtiDIJGQRRn2ZOiA==}
@@ -4622,6 +4628,8 @@ snapshots:
       lightningcss-win32-x64-msvc: 1.30.2
 
   lilconfig@2.1.0: {}
+
+  littlejsengine@1.17.11: {}
 
   locate-character@3.0.0: {}
 

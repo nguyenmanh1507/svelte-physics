@@ -73,6 +73,7 @@
 		"@threlte/extras": "^9.7.1",
 		"jolt-physics": "^0.39.0",
 		"kaplay": "^3001.0.19",
+		"littlejsengine": "^1.17.11",
 		"postprocessing": "^6.38.1",
 		"prismjs": "^1.30.0",
 		"stats.js": "^0.17.0",

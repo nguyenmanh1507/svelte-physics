@@ -85,6 +85,10 @@
 					label: 'Match 3',
 					href: '/games/match-3',
 				},
+				{
+					label: 'LittleJS: Breakout',
+					href: '/games/littlejs-breakout',
+				},
 			],
 		},
 	]
@@ -136,7 +140,7 @@
 	<NavigationMenu.Root viewport={false}>
 		<NavigationMenu.List class="flex-wrap">
 			{#each menuItems as item}
-				<NavigationMenu.Item>
+				<NavigationMenu.Item openOnHover={false}>
 					{#if isMenuDropdown(item)}
 						<NavigationMenu.Trigger class="bg-transparent">{item.label}</NavigationMenu.Trigger>
 					{:else}
