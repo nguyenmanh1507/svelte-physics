@@ -42,6 +42,11 @@
 					href: '/threlte/postprocessing',
 					preloadData: true,
 				},
+				{
+					label: 'Gemstone',
+					href: '/threlte/gemstone',
+					preloadData: true,
+				},
 			],
 		},
 		{
