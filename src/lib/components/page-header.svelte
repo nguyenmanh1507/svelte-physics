@@ -94,6 +94,10 @@
 					label: 'LittleJS: Breakout',
 					href: '/games/littlejs-breakout',
 				},
+				{
+					label: 'State Pattern - ChatGPT',
+					href: '/games/state-pattern-chatgpt',
+				},
 			],
 		},
 	]
@@ -145,7 +149,10 @@
 	<NavigationMenu.Root viewport={false}>
 		<NavigationMenu.List class="flex-wrap">
 			{#each menuItems as item}
-				<NavigationMenu.Item openOnHover={false}>
+				<NavigationMenu.Item
+					openOnHover={false}
+					class={!isMenuDropdown(item) ? activeClass(item.href) : ''}
+				>
 					{#if isMenuDropdown(item)}
 						<NavigationMenu.Trigger class="bg-transparent">{item.label}</NavigationMenu.Trigger>
 					{:else}
