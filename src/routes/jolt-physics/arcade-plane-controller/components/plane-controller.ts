@@ -56,6 +56,46 @@ export const DEFAULT_PLANE_CONTROLLER_CONFIG: PlaneControllerConfig = {
 	maxBankRadians: 0.7,
 }
 
+export const LIGHT_FIGHTER_CONTROLLER_CONFIG: PlaneControllerConfig = {
+	...DEFAULT_PLANE_CONTROLLER_CONFIG,
+	minFlightSpeed: 15,
+	maxFlightSpeed: 45,
+	turnSpeed: 1.2,
+	pitchSpeed: 0.8,
+	acceleration: 10,
+	maxBankRadians: 1.0,
+}
+
+export const CARGO_CONTROLLER_CONFIG: PlaneControllerConfig = {
+	...DEFAULT_PLANE_CONTROLLER_CONFIG,
+	minFlightSpeed: 8,
+	maxFlightSpeed: 22,
+	turnSpeed: 0.4,
+	pitchSpeed: 0.3,
+	acceleration: 3,
+	maxBankRadians: 0.5,
+}
+
+export const STUNT_CONTROLLER_CONFIG: PlaneControllerConfig = {
+	...DEFAULT_PLANE_CONTROLLER_CONFIG,
+	minFlightSpeed: 12,
+	maxFlightSpeed: 35,
+	turnSpeed: 1.0,
+	pitchSpeed: 0.7,
+	acceleration: 8,
+	maxBankRadians: 1.2,
+}
+
+export const GLIDER_CONTROLLER_CONFIG: PlaneControllerConfig = {
+	...DEFAULT_PLANE_CONTROLLER_CONFIG,
+	minFlightSpeed: 5,
+	maxFlightSpeed: 18,
+	turnSpeed: 0.5,
+	pitchSpeed: 0.4,
+	acceleration: 2,
+	maxBankRadians: 0.6,
+}
+
 const FORWARD_AXIS = new THREE.Vector3(0, 0, -1)
 
 export function clamp(value: number, min: number, max: number) {

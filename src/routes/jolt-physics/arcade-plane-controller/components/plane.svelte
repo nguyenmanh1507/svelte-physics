@@ -12,7 +12,11 @@
 		useRigidBody,
 	} from '$lib/hooks/use-jolt'
 	import {
+		CARGO_CONTROLLER_CONFIG,
 		DEFAULT_PLANE_CONTROLLER_CONFIG,
+		GLIDER_CONTROLLER_CONFIG,
+		LIGHT_FIGHTER_CONTROLLER_CONFIG,
+		STUNT_CONTROLLER_CONFIG,
 		createInitialPlaneState,
 		readPlaneInput,
 		stepPlaneController,
@@ -31,7 +35,7 @@
 
 	let { onTargetReady, onTelemetry }: Props = $props()
 
-	const config = DEFAULT_PLANE_CONTROLLER_CONFIG
+	const config = STUNT_CONTROLLER_CONFIG
 	const world = useJoltWorld()
 	const rigidBody = useRigidBody({
 		shape: { type: 'box', halfExtent: [0.45, 0.15, 1.0], convexRadius: 0.03 },
@@ -152,13 +156,13 @@
 		<!-- Tail -->
 		<T.Mesh position={[0, 0.2, 0.91]} castShadow>
 			<T.BoxGeometry args={[0.1, 0.35, 0.4]} />
-			<T.MeshStandardMaterial color="#1d4ed8" />
+			<T.MeshStandardMaterial color="#8100D1" />
 		</T.Mesh>
 
 		<!-- Tail fin -->
 		<T.Mesh position={[0, 0.25, 0.95]} castShadow>
 			<T.BoxGeometry args={[0.7, 0.06, 0.18]} />
-			<T.MeshStandardMaterial color="#2563eb" />
+			<T.MeshStandardMaterial color="#DA3D20" />
 		</T.Mesh>
 	</T.Group>
 </T.Group>

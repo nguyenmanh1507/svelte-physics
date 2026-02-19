@@ -15,7 +15,18 @@
 
 	<FollowCamera target={planeTarget} />
 
-	<T.DirectionalLight position={[20, 25, 10]} castShadow intensity={1.1} shadow.mapSize={[2048, 2048]} />
+	<T.DirectionalLight
+		position={[20, 25, 10]}
+		castShadow
+		intensity={1.1}
+		shadow.camera.left={-50}
+		shadow.camera.right={50}
+		shadow.camera.top={50}
+		shadow.camera.bottom={-50}
+		shadow.camera.near={1}
+		shadow.camera.far={100}
+		shadow.mapSize={[2048, 2048]}
+	/>
 	<T.AmbientLight intensity={0.35} />
 
 	<Plane
