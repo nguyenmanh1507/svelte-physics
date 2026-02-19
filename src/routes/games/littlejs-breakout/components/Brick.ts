@@ -6,7 +6,7 @@ class Brick extends LJS.EngineObject {
 
 		this.setCollision()
 		this.mass = 0
-    this.restitution = 1
+		this.restitution = 1
 	}
 
 	collideWithObject() {

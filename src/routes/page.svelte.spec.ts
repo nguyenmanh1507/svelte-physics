@@ -7,6 +7,6 @@ describe('/+page.svelte', () => {
 	it('should render successfully', async () => {
 		render(Page)
 
-		await expect(page).toBeVisible()
+		await expect(page.getByRole('heading', { name: 'Welcome to SvelteKit' })).toBeVisible()
 	})
 })

@@ -1,3 +1,3 @@
 <svelte:head>
-  <title>State Pattern - ChatGPT</title>
+	<title>State Pattern - ChatGPT</title>
 </svelte:head>

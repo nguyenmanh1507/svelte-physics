@@ -9,6 +9,6 @@
 		<!-- <Canvas>
 			<Scene />
 		</Canvas> -->
-    <Scene />
+		<Scene />
 	</div>
 </div>

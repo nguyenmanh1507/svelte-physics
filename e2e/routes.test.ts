@@ -56,13 +56,13 @@ for (const route of routes) {
 		// Navigate to the route
 		await page.goto(route.path)
 
-		// Verify page header navigation is present (present on all pages via layout)
-		const header = page.locator('nav.navbar')
+		// Verify page header navigation container is present (present on all pages via layout)
+		const header = page.locator('div.navbar')
 		await expect(header).toBeVisible()
 
-		// Verify the "Svelte Physics" logo/brand link is present
-		const brandLink = header.locator('a:has-text("Svelte Physics")')
-		await expect(brandLink).toBeVisible()
+		// Verify a stable top-level navigation link is present
+		const homeLink = header.locator('a:has-text("Home")')
+		await expect(homeLink).toBeVisible()
 
 		// Verify main content area is present (present on all pages via layout)
 		const mainContent = page.locator('main.container')
