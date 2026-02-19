@@ -131,26 +131,31 @@
 	castShadow
 >
 	<T.Group bind:ref={visualGroupRef}>
+		<!-- Body -->
 		<T.Mesh position={[0, 0, 0]} castShadow>
 			<T.BoxGeometry args={[0.4, 0.25, 2.2]} />
 			<T.MeshStandardMaterial color="#f2f2f2" metalness={0.2} roughness={0.6} />
 		</T.Mesh>
 
+		<!-- Wing -->
 		<T.Mesh position={[0, 0, -1.3]} castShadow>
 			<T.ConeGeometry args={[0.18, 0.4, 12]} />
 			<T.MeshStandardMaterial color="#0f172a" />
 		</T.Mesh>
 
+		<!-- Fuselage -->
 		<T.Mesh position={[0, 0.03, 0]} castShadow>
 			<T.BoxGeometry args={[2.4, 0.06, 0.55]} />
 			<T.MeshStandardMaterial color="#2563eb" />
 		</T.Mesh>
 
-		<T.Mesh position={[0, 0.2, 0.9]} castShadow>
+		<!-- Tail -->
+		<T.Mesh position={[0, 0.2, 0.91]} castShadow>
 			<T.BoxGeometry args={[0.1, 0.35, 0.4]} />
 			<T.MeshStandardMaterial color="#1d4ed8" />
 		</T.Mesh>
 
+		<!-- Tail fin -->
 		<T.Mesh position={[0, 0.25, 0.95]} castShadow>
 			<T.BoxGeometry args={[0.7, 0.06, 0.18]} />
 			<T.MeshStandardMaterial color="#2563eb" />
