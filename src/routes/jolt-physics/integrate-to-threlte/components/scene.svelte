@@ -16,14 +16,54 @@
 	type SphereConfig = {
 		id: number
 		radius: number
-		color: number
+		texture: THREE.Texture | null
+		fallbackColor: number
 		position: [number, number, number]
 	}
+
+	const floorTexturePath = '/images/prototype-texture/Dark/texture_01.png'
+	const prototypeTexturePaths = [
+		'/images/prototype-texture/Green/texture_07.png',
+		'/images/prototype-texture/Orange/texture_07.png',
+		'/images/prototype-texture/Light/texture_07.png',
+		'/images/prototype-texture/Purple/texture_07.png',
+		'/images/prototype-texture/Red/texture_07.png',
+		floorTexturePath,
+	]
+	const sphereTexturePaths = prototypeTexturePaths.filter((path) => path !== floorTexturePath)
+	const textureLoader = new THREE.TextureLoader()
+	const textureCache = new Map<string, THREE.Texture>()
+
+	function loadTexture(path: string, repeatX = 1, repeatY = 1) {
+		const texture = textureLoader.load(path)
+		texture.wrapS = THREE.RepeatWrapping
+		texture.wrapT = THREE.RepeatWrapping
+		texture.repeat.set(repeatX, repeatY)
+		return texture
+	}
+
+	function getCachedTexture(path: string) {
+		const cachedTexture = textureCache.get(path)
+		if (cachedTexture) return cachedTexture
+
+		const texture = loadTexture(path)
+		textureCache.set(path, texture)
+		return texture
+	}
+
+	function getRandomSphereTexture() {
+		if (sphereTexturePaths.length === 0) return null
+		const randomPath = sphereTexturePaths[Math.floor(Math.random() * sphereTexturePaths.length)]
+		return getCachedTexture(randomPath)
+	}
+
+	const floorTexture = loadTexture(floorTexturePath, 25, 25)
 
 	const sphereConfigs: SphereConfig[] = Array.from({ length: 10 }, (_, index) => ({
 		id: index,
 		radius: 0.5 + Math.random() * 0.5,
-		color: Math.floor(Math.random() * 0xffffff),
+		texture: getRandomSphereTexture(),
+		fallbackColor: Math.floor(Math.random() * 0xffffff),
 		position: [(Math.random() - 0.5) * 10, 10 + index * 2, (Math.random() - 0.5) * 10],
 	}))
 
@@ -163,7 +203,7 @@
 
 <T.Mesh bind:ref={floorMesh} position={[0, -0.5, 0]} receiveShadow>
 	<T.BoxGeometry args={[100, 1, 100]} />
-	<T.MeshStandardMaterial color="#c7c7c7" />
+	<T.MeshStandardMaterial map={floorTexture} />
 </T.Mesh>
 
 {#each sphereConfigs as sphere, index (sphere.id)}
@@ -175,7 +215,7 @@
 		}}
 	>
 		<T.SphereGeometry args={[sphere.radius, 32, 32]} />
-		<T.MeshStandardMaterial color={sphere.color} />
+		<T.MeshStandardMaterial map={sphere.texture ?? undefined} color={sphere.fallbackColor} />
 	</T.Mesh>
 {/each}
 
