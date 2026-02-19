@@ -149,3 +149,24 @@ Use the API from:
 ```ts
 import { JoltWorld, JoltRigidBody, useJoltWorld, useRigidBody } from '$lib/hooks/use-jolt'
 ```
+
+## 8. Kinematic arcade controller pattern
+
+For controller-driven vehicles (plane/car), use a kinematic body and move it imperatively.
+
+Why:
+
+- `useRigidBody` still owns body lifecycle and cleanup
+- `useJoltWorld` gives access to `BodyInterface` for `MoveKinematic`
+- this keeps controls deterministic and arcade-friendly
+
+Recommended loop order:
+
+```ts
+useTask('arcade-plane-controller', (delta) => {
+	// 1) input -> controller state
+	// 2) MoveKinematic(bodyId, position, rotation, delta)
+}, { before: JOLT_WORLD_STEP_TASK_KEY })
+```
+
+By running the controller task `before: JOLT_WORLD_STEP_TASK_KEY`, your kinematic target is applied before Jolt advances the world step.

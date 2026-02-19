@@ -11,6 +11,7 @@
 		DEFAULT_NORMAL_SUB_STEPS,
 		DEFAULT_SLOW_FRAME_SUB_STEPS,
 		DEFAULT_SUB_STEP_THRESHOLD,
+		JOLT_WORLD_STEP_TASK_KEY,
 		OBJECT_LAYER_BY_NAME,
 	} from './constants'
 	import { toJoltQuat, toJoltRVec3, toJoltVec3, toThreeQuat, toThreeVec3 } from './convert'
@@ -171,7 +172,7 @@
 		}
 	})
 
-	useTask((delta) => {
+	useTask(JOLT_WORLD_STEP_TASK_KEY, (delta) => {
 		if (!autoStep) return
 
 		const jolt = get(joltStore)

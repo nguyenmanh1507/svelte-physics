@@ -9,6 +9,7 @@ export const DEFAULT_MAX_DELTA = 1 / 30
 export const DEFAULT_SUB_STEP_THRESHOLD = 1 / 55
 export const DEFAULT_SLOW_FRAME_SUB_STEPS = 2
 export const DEFAULT_NORMAL_SUB_STEPS = 1
+export const JOLT_WORLD_STEP_TASK_KEY = 'jolt-world-step'
 
 export const DEFAULT_MOTION_TYPE: MotionType = 'dynamic'
 
