@@ -1,7 +1,7 @@
 import { onMount } from 'svelte'
 import { writable } from 'svelte/store'
-import initJolt from 'jolt-physics'
-import type JoltType from 'jolt-physics'
+import initJolt from 'jolt-physics/wasm-compat'
+import type JoltType from 'jolt-physics/wasm-compat'
 import * as THREE from 'three'
 
 // Object layers for collision filtering
@@ -17,20 +17,18 @@ export function useJolt() {
 	const error = writable<unknown>(null)
 	const dynamicObjects = writable<THREE.Object3D[]>([])
 
-	function setupCollisionFiltering(settings: JoltType.JoltSettings) {
-		if (!Jolt) return
-
+	function setupCollisionFiltering(JoltModule: typeof JoltType, settings: JoltType.JoltSettings) {
 		// Define which layers can collide with each other
-		const objectFilter = new Jolt.ObjectLayerPairFilterTable(NUM_OBJECT_LAYERS)
+		const objectFilter = new JoltModule.ObjectLayerPairFilterTable(NUM_OBJECT_LAYERS)
 		objectFilter.EnableCollision(LAYER_NON_MOVING, LAYER_MOVING)
 		objectFilter.EnableCollision(LAYER_MOVING, LAYER_MOVING)
 
 		// Map object layers to broadphase layers
-		const BP_LAYER_NON_MOVING = new Jolt.BroadPhaseLayer(0)
-		const BP_LAYER_MOVING = new Jolt.BroadPhaseLayer(1)
+		const BP_LAYER_NON_MOVING = new JoltModule.BroadPhaseLayer(0)
+		const BP_LAYER_MOVING = new JoltModule.BroadPhaseLayer(1)
 		const NUM_BROAD_PHASE_LAYERS = 2
 
-		const bpInterface = new Jolt.BroadPhaseLayerInterfaceTable(
+		const bpInterface = new JoltModule.BroadPhaseLayerInterfaceTable(
 			NUM_OBJECT_LAYERS,
 			NUM_BROAD_PHASE_LAYERS
 		)
@@ -39,7 +37,7 @@ export function useJolt() {
 
 		settings.mObjectLayerPairFilter = objectFilter
 		settings.mBroadPhaseLayerInterface = bpInterface
-		settings.mObjectVsBroadPhaseLayerFilter = new Jolt.ObjectVsBroadPhaseLayerFilterTable(
+		settings.mObjectVsBroadPhaseLayerFilter = new JoltModule.ObjectVsBroadPhaseLayerFilterTable(
 			settings.mBroadPhaseLayerInterface,
 			NUM_BROAD_PHASE_LAYERS,
 			settings.mObjectLayerPairFilter,
@@ -48,11 +46,12 @@ export function useJolt() {
 	}
 
 	function initPhysics(JoltModule: typeof JoltType) {
-		window.Jolt = Jolt // Store Jolt in window for global access
+		window.Jolt = JoltModule
+		globalThis.Jolt = JoltModule
 
 		// Create settings
 		const settings = new JoltModule.JoltSettings()
-		setupCollisionFiltering(settings)
+		setupCollisionFiltering(JoltModule, settings)
 		const ji = new JoltModule.JoltInterface(settings)
 		JoltModule.destroy(settings)
 
@@ -99,7 +98,16 @@ export const wrapQuat = (q: JoltType.Quat) =>
 	new THREE.Quaternion(q.GetX(), q.GetY(), q.GetZ(), q.GetW())
 
 // Convert Three.js to Jolt
-export const unwrapVec3 = (v: THREE.Vector3) => new Jolt!.Vec3(v.x, v.y, v.z)
-export const unwrapRVec3 = (v: THREE.Vector3) => new Jolt!.RVec3(v.x, v.y, v.z)
-export const unwrapQuat = (q: THREE.Quaternion) => new Jolt!.Quat(q.x, q.y, q.z, q.w)
+export const unwrapVec3 = (v: THREE.Vector3) => {
+	if (!globalThis.Jolt) throw new Error('Jolt is not initialized')
+	return new globalThis.Jolt.Vec3(v.x, v.y, v.z)
+}
+export const unwrapRVec3 = (v: THREE.Vector3) => {
+	if (!globalThis.Jolt) throw new Error('Jolt is not initialized')
+	return new globalThis.Jolt.RVec3(v.x, v.y, v.z)
+}
+export const unwrapQuat = (q: THREE.Quaternion) => {
+	if (!globalThis.Jolt) throw new Error('Jolt is not initialized')
+	return new globalThis.Jolt.Quat(q.x, q.y, q.z, q.w)
+}
 // ================================

@@ -81,6 +81,10 @@
 					label: 'Integrate to Threlte',
 					href: '/jolt-physics/integrate-to-threlte',
 				},
+				{
+					label: 'Arcade Plane Controller',
+					href: '/jolt-physics/arcade-plane-controller',
+				},
 			],
 		},
 		{
