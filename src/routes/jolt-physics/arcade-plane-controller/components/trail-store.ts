@@ -29,3 +29,20 @@ export function getWingEdgeWorldPositions(
 	outRight.copy(RIGHT_WING_EDGE_LOCAL).applyQuaternion(quaternion).add(position)
 	return { left: outLeft, right: outRight }
 }
+
+/**
+ * Computes trail emit points from a rendered plane group world transform.
+ * This includes extra visual rotations (like banking) applied on the group.
+ */
+export function getTrailWorldPositionsFromGroup(
+	group: THREE.Object3D,
+	outTail: THREE.Vector3 = new THREE.Vector3(),
+	outLeft: THREE.Vector3 = new THREE.Vector3(),
+	outRight: THREE.Vector3 = new THREE.Vector3()
+): { tail: THREE.Vector3; left: THREE.Vector3; right: THREE.Vector3 } {
+	group.updateWorldMatrix(true, false)
+	outTail.copy(TAIL_LOCAL).applyMatrix4(group.matrixWorld)
+	outLeft.copy(LEFT_WING_EDGE_LOCAL).applyMatrix4(group.matrixWorld)
+	outRight.copy(RIGHT_WING_EDGE_LOCAL).applyMatrix4(group.matrixWorld)
+	return { tail: outTail, left: outLeft, right: outRight }
+}

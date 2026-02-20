@@ -18,7 +18,11 @@
 		readPlaneInput,
 		stepPlaneController,
 	} from './plane-controller'
-	import { getTailWorldPosition, getWingEdgeWorldPositions } from './trail-store'
+	import {
+		getTailWorldPosition,
+		getTrailWorldPositionsFromGroup,
+		getWingEdgeWorldPositions,
+	} from './trail-store'
 
 	type PlaneTelemetry = {
 		forwardSpeed: number
@@ -126,12 +130,31 @@
 			if (trailData) {
 				const isMoving = result.forwardSpeed > 2
 				if (isMoving) {
-					const tailPoint = getTailWorldPosition(result.position, result.quaternion)
-					const { left, right } = getWingEdgeWorldPositions(result.position, result.quaternion)
+					const { tailPoint, leftWingPoint, rightWingPoint } = visualGroupRef
+						? (() => {
+								const { tail, left, right } = getTrailWorldPositionsFromGroup(visualGroupRef)
+								return {
+									tailPoint: tail,
+									leftWingPoint: left,
+									rightWingPoint: right,
+								}
+							})()
+						: (() => {
+								const tailPoint = getTailWorldPosition(result.position, result.quaternion)
+								const { left, right } = getWingEdgeWorldPositions(
+									result.position,
+									result.quaternion
+								)
+								return {
+									tailPoint,
+									leftWingPoint: left,
+									rightWingPoint: right,
+								}
+							})()
 					trailData = {
 						tailPoint,
-						leftWingPoint: left,
-						rightWingPoint: right,
+						leftWingPoint,
+						rightWingPoint,
 						forwardSpeed: result.forwardSpeed,
 					}
 				} else {
