@@ -7,6 +7,7 @@
 	import Ground from './ground.svelte'
 	import Plane from './plane.svelte'
 	import Trail from './trail.svelte'
+	import { Stats } from '$lib/components/stats'
 
 	let planeTarget = $state<THREE.Object3D | undefined>(undefined)
 	let trailData = $state<{
@@ -47,3 +48,5 @@
 
 	<Ground />
 </JoltWorld>
+
+<Stats />
