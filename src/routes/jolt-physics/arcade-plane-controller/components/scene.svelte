@@ -6,8 +6,15 @@
 	import FollowCamera from './follow-camera.svelte'
 	import Ground from './ground.svelte'
 	import Plane from './plane.svelte'
+	import Trail from './trail.svelte'
 
 	let planeTarget = $state<THREE.Object3D | undefined>(undefined)
+	let trailData = $state<{
+		tailPoint: THREE.Vector3 | null
+		leftWingPoint: THREE.Vector3 | null
+		rightWingPoint: THREE.Vector3 | null
+		forwardSpeed: number
+	}>({ tailPoint: null, leftWingPoint: null, rightWingPoint: null, forwardSpeed: 0 })
 </script>
 
 <JoltWorld>
@@ -30,10 +37,13 @@
 	<T.AmbientLight intensity={0.35} />
 
 	<Plane
+		bind:trailData
 		onTargetReady={(target) => {
 			planeTarget = target
 		}}
 	/>
+
+	<Trail {trailData} />
 
 	<Ground />
 </JoltWorld>

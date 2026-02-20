@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { T, useTask } from '@threlte/core'
 	import { onMount } from 'svelte'
+	import { SvelteSet } from 'svelte/reactivity'
 	import { get } from 'svelte/store'
 	import type * as THREE from 'three'
 
@@ -12,15 +13,12 @@
 		useRigidBody,
 	} from '$lib/hooks/use-jolt'
 	import {
-		CARGO_CONTROLLER_CONFIG,
-		DEFAULT_PLANE_CONTROLLER_CONFIG,
-		GLIDER_CONTROLLER_CONFIG,
-		LIGHT_FIGHTER_CONTROLLER_CONFIG,
 		STUNT_CONTROLLER_CONFIG,
 		createInitialPlaneState,
 		readPlaneInput,
 		stepPlaneController,
 	} from './plane-controller'
+	import { getTailWorldPosition, getWingEdgeWorldPositions } from './trail-store'
 
 	type PlaneTelemetry = {
 		forwardSpeed: number
@@ -28,12 +26,20 @@
 		grounded: boolean
 	}
 
+	type TrailData = {
+		tailPoint: THREE.Vector3 | null
+		leftWingPoint: THREE.Vector3 | null
+		rightWingPoint: THREE.Vector3 | null
+		forwardSpeed: number
+	}
+
 	type Props = {
+		trailData?: TrailData
 		onTargetReady?: (target: THREE.Object3D) => void
 		onTelemetry?: (telemetry: PlaneTelemetry) => void
 	}
 
-	let { onTargetReady, onTelemetry }: Props = $props()
+	let { trailData = $bindable(), onTargetReady, onTelemetry }: Props = $props()
 
 	const config = STUNT_CONTROLLER_CONFIG
 	const world = useJoltWorld()
@@ -44,7 +50,7 @@
 		position: [0, config.groundHeight + config.groundClearance, 0],
 	})
 
-	const pressedKeys = new Set<string>()
+	const pressedKeys = new SvelteSet<string>()
 	let hasEmittedTarget = false
 	let visualGroupRef = $state<THREE.Group | undefined>(undefined)
 	let controllerState = createInitialPlaneState(config)
@@ -115,6 +121,27 @@
 
 			if (visualGroupRef) {
 				visualGroupRef.rotation.z = result.bankAngle
+			}
+
+			if (trailData) {
+				const isMoving = result.forwardSpeed > 2
+				if (isMoving) {
+					const tailPoint = getTailWorldPosition(result.position, result.quaternion)
+					const { left, right } = getWingEdgeWorldPositions(result.position, result.quaternion)
+					trailData = {
+						tailPoint,
+						leftWingPoint: left,
+						rightWingPoint: right,
+						forwardSpeed: result.forwardSpeed,
+					}
+				} else {
+					trailData = {
+						tailPoint: null,
+						leftWingPoint: null,
+						rightWingPoint: null,
+						forwardSpeed: result.forwardSpeed,
+					}
+				}
 			}
 
 			if (onTelemetry) {
