@@ -1,16 +1,30 @@
 <script lang="ts">
-	import { T } from '@threlte/core'
+	import { T, useThrelte } from '@threlte/core'
 	import { Environment, Gizmo, OrbitControls } from '@threlte/extras'
 
 	import { Stats } from '$lib/components/stats'
 	import { JoltWorld } from '$lib/hooks/use-jolt'
+	// import { CameraLogger } from '$lib/components/camera-logger'
 	import Ground from './ground.svelte'
 	import Car from './car.svelte'
 	import Taxi from './taxi.svelte'
+
+	const { scene } = useThrelte()
+	scene.backgroundBlurriness = 0.4
 </script>
 
 <JoltWorld>
-	<T.PerspectiveCamera makeDefault position={[0, 15, 30]} lookAt.y={0}>
+	<T.PerspectiveCamera
+		makeDefault
+		position={[0.02, 4.5, 10]}
+		rotation={[0, 0, 0]}
+		fov={50}
+		near={0.1}
+		far={2000}
+		oncreate={(ref) => {
+			ref.lookAt(0, 2, 0)
+		}}
+	>
 		<OrbitControls>
 			<Gizmo />
 		</OrbitControls>
@@ -39,3 +53,5 @@
 </JoltWorld>
 
 <Stats />
+
+<!-- <CameraLogger /> -->

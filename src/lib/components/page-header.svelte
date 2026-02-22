@@ -85,6 +85,10 @@
 					label: 'Arcade Plane Controller',
 					href: '/jolt-physics/arcade-plane-controller',
 				},
+				{
+					label: 'Arcade Car Controller',
+					href: '/jolt-physics/arcade-car-controller',
+				},
 			],
 		},
 		{
