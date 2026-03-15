@@ -74,6 +74,7 @@
 		"jolt-physics": "^1.0.0",
 		"kaplay": "^3001.0.19",
 		"littlejsengine": "^1.18.0",
+		"p5": "^2.2.2",
 		"postprocessing": "^6.38.3",
 		"prismjs": "^1.30.0",
 		"stats.js": "^0.17.0",

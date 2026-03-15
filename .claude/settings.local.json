@@ -3,7 +3,10 @@
     "allow": [
       "Bash(npx svelte-check:*)",
       "Bash(find /home/ngmanh/Sandbox/svelte-physics -path */app/paths* -not -path */node_modules/.pnpm/*)",
-      "Bash(npx eslint:*)"
+      "Bash(npx eslint:*)",
+      "Bash(npx tsc:*)",
+      "Bash(ls node_modules/q5/*.d.ts)",
+      "Bash(ls node_modules/p5/lib/*.d.ts)"
     ]
   }
 }
