@@ -108,6 +108,15 @@
 				},
 			],
 		},
+		{
+			label: 'JS Physics',
+			children: [
+				{
+					label: 'Bouncing Ball',
+					href: '/js-physics/bouncing-ball',
+				},
+			],
+		},
 	]
 
 	// Helper function to check if a path is active
@@ -123,10 +132,7 @@
 		return cn('link font-bold', isActive(path) && 'text-green-300')
 	}
 
-	// Helper to resolve paths with type assertion for dynamic routes
-	function resolvePath(path: string): string {
-		return resolve(path as any)
-	}
+	const resolveHref = resolve as (path: string) => string
 
 	type ListItemProps = HTMLAttributes<HTMLAnchorElement> & {
 		title: string
@@ -137,18 +143,16 @@
 {#snippet ListItem({ title, href, class: className, ...restProps }: ListItemProps)}
 	<li>
 		<NavigationMenu.Link class="p-0">
-			{#snippet children()}
-				<a
-					href={resolvePath(href)}
-					class={cn(
-						'hover:bg-neutral focus:bg-neutral block space-y-1 p-3 leading-none no-underline transition-colors outline-none select-none hover:text-white focus:text-white',
-						className
-					)}
-					{...restProps}
-				>
-					<div class="text-sm leading-none font-medium">{title}</div>
-				</a>
-			{/snippet}
+			<a
+				href={resolve(href as any)}
+				class={cn(
+					'hover:bg-neutral focus:bg-neutral block space-y-1 p-3 leading-none no-underline transition-colors outline-none select-none hover:text-white focus:text-white',
+					className
+				)}
+				{...restProps}
+			>
+				<div class="text-sm leading-none font-medium">{title}</div>
+			</a>
 		</NavigationMenu.Link>
 	</li>
 {/snippet}
@@ -156,7 +160,7 @@
 <div class="navbar bg-neutral text-neutral-content z-10 flex justify-center shadow-sm">
 	<NavigationMenu.Root viewport={false}>
 		<NavigationMenu.List class="flex-wrap">
-			{#each menuItems as item}
+			{#each menuItems as item (item.label)}
 				<NavigationMenu.Item
 					openOnHover={false}
 					class={!isMenuDropdown(item) ? activeClass(item.href) : ''}
@@ -164,7 +168,7 @@
 					{#if isMenuDropdown(item)}
 						<NavigationMenu.Trigger class="bg-transparent">{item.label}</NavigationMenu.Trigger>
 					{:else}
-						<NavigationMenu.Link href={resolvePath(item.href)}>
+						<NavigationMenu.Link href={resolveHref(item.href)}>
 							{item.label}
 						</NavigationMenu.Link>
 					{/if}

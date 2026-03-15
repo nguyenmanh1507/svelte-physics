@@ -19,12 +19,7 @@ describe('plane controller', () => {
 		const state = createInitialPlaneState(DEFAULT_PLANE_CONTROLLER_CONFIG)
 		state.forwardSpeed = DEFAULT_PLANE_CONTROLLER_CONFIG.maxFlightSpeed - 1
 
-		const input = readPlaneInput(
-			new Set(['ShiftLeft']),
-			state,
-			1,
-			DEFAULT_PLANE_CONTROLLER_CONFIG
-		)
+		const input = readPlaneInput(new Set(['ShiftLeft']), state, 1, DEFAULT_PLANE_CONTROLLER_CONFIG)
 		expect(input.targetSpeed).toBe(DEFAULT_PLANE_CONTROLLER_CONFIG.maxFlightSpeed)
 	})
 

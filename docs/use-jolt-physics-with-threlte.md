@@ -163,10 +163,14 @@ Why:
 Recommended loop order:
 
 ```ts
-useTask('arcade-plane-controller', (delta) => {
-	// 1) input -> controller state
-	// 2) MoveKinematic(bodyId, position, rotation, delta)
-}, { before: JOLT_WORLD_STEP_TASK_KEY })
+useTask(
+	'arcade-plane-controller',
+	(delta) => {
+		// 1) input -> controller state
+		// 2) MoveKinematic(bodyId, position, rotation, delta)
+	},
+	{ before: JOLT_WORLD_STEP_TASK_KEY }
+)
 ```
 
 By running the controller task `before: JOLT_WORLD_STEP_TASK_KEY`, your kinematic target is applied before Jolt advances the world step.

@@ -30,12 +30,16 @@ A dev-tool component that displays live camera properties as a floating HUD over
 
 ```html
 <T.PerspectiveCamera
-  position={[0, 15, 30]}
-  rotation={[-0.46, 0, 0]}
-  fov={75}
-  near={0.1}
-  far={1000}
-  makeDefault
+	position="{[0,"
+	15,
+	30]}
+	rotation="{[-0.46,"
+	0,
+	0]}
+	fov="{75}"
+	near="{0.1}"
+	far="{1000}"
+	makeDefault
 />
 ```
 

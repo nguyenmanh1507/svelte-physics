@@ -14,7 +14,11 @@
 </script>
 
 {#await floorTexture then map}
-	<JoltRigidBody shape={{ type: 'box', halfExtent: [50, 0.5, 50], convexRadius: 0.05 }} motionType="static" layer="nonMoving">
+	<JoltRigidBody
+		shape={{ type: 'box', halfExtent: [50, 0.5, 50], convexRadius: 0.05 }}
+		motionType="static"
+		layer="nonMoving"
+	>
 		{#snippet children({ oncreate })}
 			<T.Mesh position={[0, -0.5, 0]} receiveShadow {oncreate}>
 				<T.BoxGeometry args={[10000, 1, 10000]} />
