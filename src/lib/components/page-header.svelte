@@ -64,6 +64,10 @@
 					label: '03 - Billiards',
 					href: '/ten-min-physics/03-billiard',
 				},
+				{
+					label: '04 - Pinball Simulation',
+					href: '/ten-min-physics/04-pinball-simulation',
+				},
 			],
 		},
 		{
