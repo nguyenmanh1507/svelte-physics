@@ -121,6 +121,10 @@
 				},
 			],
 		},
+	{
+		label: 'BabylonJS',
+		href: '/babylonjs',
+	},
 	]
 
 	// Helper function to check if a path is active
