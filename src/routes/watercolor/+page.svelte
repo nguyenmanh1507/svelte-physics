@@ -1,0 +1,1188 @@
+<script lang="ts">
+	import { onMount } from 'svelte'
+
+	let canvasRef: HTMLCanvasElement
+	let containerRef: HTMLElement
+
+	type Color = { h: number; s: number; l: number }
+
+	const palette = {
+		stems: [
+			{ h: 140, s: 30, l: 35 },
+			{ h: 130, s: 25, l: 40 },
+			{ h: 145, s: 20, l: 30 }
+		],
+		flowers: [
+			{ h: 348, s: 72, l: 58 },
+			{ h: 332, s: 64, l: 64 },
+			{ h: 12, s: 72, l: 62 },
+			{ h: 286, s: 40, l: 58 },
+			{ h: 218, s: 48, l: 61 },
+			{ h: 198, s: 62, l: 58 },
+			{ h: 44, s: 62, l: 74 },
+			{ h: 312, s: 44, l: 62 }
+		],
+		calyx: { h: 132, s: 34, l: 30 },
+		pollen: { h: 45, s: 80, l: 55 },
+		vase: { h: 0, s: 20, l: 92 }
+	}
+
+	class WatercolorBrush {
+		ctx: CanvasRenderingContext2D
+
+		constructor(ctx: CanvasRenderingContext2D) {
+			this.ctx = ctx
+		}
+
+		stroke(
+			x1: number,
+			y1: number,
+			x2: number,
+			y2: number,
+			color: Color,
+			width: number,
+			alpha: number
+		) {
+			const hue = color.h + (Math.random() * 10 - 5)
+			const light = color.l + (Math.random() * 10 - 5)
+
+			this.ctx.beginPath()
+			this.ctx.moveTo(x1, y1)
+			this.ctx.lineTo(x2, y2)
+			this.ctx.strokeStyle = `hsla(${hue}, ${color.s}%, ${light}%, ${alpha})`
+			this.ctx.lineWidth = width * (0.8 + Math.random() * 0.4)
+			this.ctx.stroke()
+		}
+
+		wash(x: number, y: number, radius: number, color: Color, alpha: number) {
+			this.ctx.beginPath()
+			this.ctx.arc(x, y, radius, 0, Math.PI * 2)
+			this.ctx.fillStyle = `hsla(${color.h}, ${color.s}%, ${color.l}%, ${alpha})`
+			this.ctx.fill()
+		}
+
+		blob(
+			x: number,
+			y: number,
+			size: number,
+			color: Color,
+			alpha: number,
+			angle = Math.random() * Math.PI,
+			stretch = 1.2
+		) {
+			for (let i = 0; i < 2; i += 1) {
+				const offsetX = (Math.random() - 0.5) * size * 0.34
+				const offsetY = (Math.random() - 0.5) * size * 0.34
+				const radius = Math.max(0.8, size * (0.76 + Math.random() * 0.42))
+				const radiusX = radius * stretch
+				const radiusY = radius * (0.65 + Math.random() * 0.35)
+				const hue = color.h + (Math.random() * 8 - 4)
+				const light = color.l + (Math.random() * 10 - 5)
+				const rotation = angle + (Math.random() - 0.5) * 0.28
+
+				this.ctx.beginPath()
+				this.ctx.ellipse(x + offsetX, y + offsetY, radiusX, radiusY, rotation, 0, Math.PI * 2)
+				this.ctx.fillStyle = `hsla(${hue}, ${color.s}%, ${light}%, ${alpha})`
+				this.ctx.fill()
+			}
+		}
+	}
+
+	type Segment = { x: number; y: number; angle: number; cos: number; sin: number }
+	type Leaf = {
+		angle: number
+		cos: number
+		sin: number
+		length: number
+		radius: number
+		drawn: boolean
+	}
+
+	class Stem {
+		x: number
+		y: number
+		targetHeight: number
+		angle: number
+		currentHeight: number
+		segments: Segment[]
+		growSpeed: number
+		done: boolean
+		hasFlower: boolean
+		leavesBySegment: (Leaf[] | undefined)[]
+		leafDensity: number
+		flowerTypeHint: number
+		tip: { x: number; y: number }
+
+		constructor(x: number, y: number, targetHeight: number, angle: number) {
+			this.x = x
+			this.y = y
+			this.targetHeight = targetHeight
+			this.angle = angle
+			this.currentHeight = 0
+			this.segments = []
+			this.growSpeed = 2 + Math.random() * 2
+			this.done = false
+			this.hasFlower = false
+			this.leavesBySegment = []
+			this.leafDensity = 0.14 + Math.random() * 0.08
+			this.flowerTypeHint = Stem.pickFlowerType()
+
+			let px = x
+			let py = y
+			let a = angle
+			const segmentCount = Math.floor(targetHeight / 5)
+
+			for (let i = 0; i < segmentCount; i += 1) {
+				a += (-Math.PI / 2 - a) * 0.02 + (Math.random() - 0.5) * 0.05
+				const nx = px + 5 * Math.cos(a)
+				const ny = py + 5 * Math.sin(a)
+
+				this.segments.push({
+					x: nx,
+					y: ny,
+					angle: a,
+					cos: Math.cos(a),
+					sin: Math.sin(a)
+				})
+
+				if (
+					i > segmentCount * 0.18 &&
+					i < segmentCount * 0.92 &&
+					Math.random() < this.leafDensity
+				) {
+					const leafAngle =
+						a + (Math.random() < 0.5 ? -1 : 1) * (0.65 + Math.random() * 0.55)
+					const leaf: Leaf = {
+						angle: leafAngle,
+						cos: Math.cos(leafAngle),
+						sin: Math.sin(leafAngle),
+						length: 18 + Math.random() * 22,
+						radius: 4.4 + Math.random() * 4.4,
+						drawn: false
+					}
+
+					if (!this.leavesBySegment[i]) {
+						this.leavesBySegment[i] = []
+					}
+					this.leavesBySegment[i]!.push(leaf)
+				}
+
+				px = nx
+				py = ny
+			}
+
+			this.tip = { x: px, y: py }
+		}
+
+		static pickFlowerType(): number {
+			const n = Math.random()
+			if (n < 0.22) return 0
+			if (n < 0.36) return 1
+			if (n < 0.56) return 2
+			if (n < 0.74) return 3
+			if (n < 0.9) return 4
+			return 5
+		}
+
+		update(): boolean {
+			if (this.currentHeight < this.segments.length) {
+				this.currentHeight += this.growSpeed
+				if (this.currentHeight >= this.segments.length) {
+					this.currentHeight = this.segments.length
+					this.done = true
+				}
+			}
+			return this.done
+		}
+
+		draw(brush: WatercolorBrush) {
+			const visible = Math.floor(this.currentHeight)
+			if (visible < 1) return
+
+			const activeEnd = this.hasFlower ? Math.max(1, visible - 1) : visible
+			const recentStart = Math.max(1, activeEnd - ((this.growSpeed + 0.999999) | 0) - 1)
+			const total = this.segments.length
+
+			for (let i = recentStart; i < activeEnd; i += 1) {
+				const a = this.segments[i - 1]
+				const b = this.segments[i]
+				const width = 3.2 * (1 - i / total) + 0.85
+
+				brush.stroke(a.x, a.y, b.x, b.y, palette.stems[1], width, 0.15)
+				brush.stroke(a.x, a.y, b.x, b.y, palette.stems[2], width * 0.55, 0.18)
+
+				const leaves = this.leavesBySegment[i]
+				if (leaves) {
+					for (const leaf of leaves) {
+						if (!leaf.drawn) {
+							this.drawLeaf(brush, b.x, b.y, leaf, width)
+							leaf.drawn = true
+						}
+					}
+				}
+			}
+		}
+
+		drawLeaf(brush: WatercolorBrush, x: number, y: number, leaf: Leaf, stemWidth: number) {
+			const tipX = x + leaf.cos * leaf.length
+			const tipY = y + leaf.sin * leaf.length
+			const midLength = leaf.length * 0.55
+			const midX = x + leaf.cos * midLength
+			const midY = y + leaf.sin * midLength
+			const sideX = -leaf.sin
+			const sideY = leaf.cos
+			const spread = leaf.radius * 0.55
+			const veinX = x - leaf.cos * (leaf.radius * 0.35)
+			const veinY = y - leaf.sin * (leaf.radius * 0.35)
+
+			brush.blob(midX, midY, leaf.radius * 1.15, palette.stems[0], 0.11, leaf.angle, 2.15)
+			brush.blob(
+				midX + sideX * spread,
+				midY + sideY * spread,
+				leaf.radius * 0.82,
+				palette.stems[1],
+				0.085,
+				leaf.angle + 0.14,
+				1.9
+			)
+			brush.blob(
+				midX - sideX * spread,
+				midY - sideY * spread,
+				leaf.radius * 0.78,
+				palette.stems[2],
+				0.07,
+				leaf.angle - 0.12,
+				1.8
+			)
+			brush.stroke(
+				veinX,
+				veinY,
+				tipX,
+				tipY,
+				palette.stems[2],
+				Math.max(0.45, 0.26 * stemWidth),
+				0.15
+			)
+			brush.stroke(midX, midY, tipX, tipY, palette.stems[2], 0.3, 0.08)
+		}
+	}
+
+	type Petal = {
+		angle: number
+		cos: number
+		sin: number
+		distance: number
+		radius: number
+		layer: number
+		stretch: number
+		jitter: number
+	}
+
+	type CenterDot = {
+		cos: number
+		sin: number
+		distance: number
+		size: number
+		color: Color
+	}
+
+	class Flower {
+		x: number
+		y: number
+		scale: number
+		type: number
+		age: number
+		maxAge: number
+		petals: Petal[]
+		centerDots: CenterDot[]
+		baseColor: Color
+		altColor: Color
+		darkColor: Color
+		lightColor: Color
+		petalDrawChance: number
+		speckChance: number
+		coreSize: number
+		calyxSize: number
+		capWidth: number
+		capHeight: number
+		capLobes: number
+		headTilt: number
+		headLift: number
+		capMode: string
+
+		constructor(x: number, y: number, type: number, scale = 1) {
+			this.x = x
+			this.y = y
+			this.scale = scale
+			this.type = type
+			this.age = 0
+			this.maxAge = 96 + Math.random() * 46
+			this.petals = []
+			this.centerDots = []
+
+			const colorIndex = Math.floor(Math.random() * palette.flowers.length)
+			this.baseColor = palette.flowers[colorIndex]
+			this.altColor =
+				palette.flowers[
+					(colorIndex + 1 + ((Math.random() * 2) | 0)) % palette.flowers.length
+				]
+			this.darkColor = {
+				h: this.baseColor.h,
+				s: Math.min(100, this.baseColor.s + 10),
+				l: Math.max(16, this.baseColor.l - 24)
+			}
+			this.lightColor = {
+				h: this.baseColor.h,
+				s: Math.max(20, this.baseColor.s - 8),
+				l: Math.min(84, this.baseColor.l + 14)
+			}
+
+			this.petalDrawChance = 0.64
+			this.speckChance = 0.28
+			this.coreSize = 7 * scale
+			this.calyxSize = 8.5 * scale
+			this.capWidth = 28 * scale
+			this.capHeight = 20 * scale
+			this.capLobes = 8
+			this.headTilt = (Math.random() - 0.5) * 0.65
+			this.headLift = 11 * scale
+			this.capMode = 'fan'
+
+			this.initShape()
+		}
+
+		addPetal(angle: number, distance: number, radius: number, layer = 0, stretch = 1.45) {
+			this.petals.push({
+				angle,
+				cos: Math.cos(angle),
+				sin: Math.sin(angle),
+				distance: distance * this.scale,
+				radius: radius * this.scale,
+				layer,
+				stretch: stretch + (Math.random() - 0.5) * 0.24,
+				jitter: (Math.random() - 0.5) * 0.35
+			})
+		}
+
+		addCenterDots(
+			count: number,
+			minDistance: number,
+			maxDistance: number,
+			minSize: number,
+			maxSize: number,
+			color: Color
+		) {
+			for (let i = 0; i < count; i += 1) {
+				const angle = Math.random() * Math.PI * 2
+				this.centerDots.push({
+					cos: Math.cos(angle),
+					sin: Math.sin(angle),
+					distance:
+						(minDistance + Math.random() * (maxDistance - minDistance)) * this.scale,
+					size: (minSize + Math.random() * (maxSize - minSize)) * this.scale,
+					color
+				})
+			}
+		}
+
+		initShape() {
+			if (this.type === 0) {
+				this.petalDrawChance = 0.6
+				this.maxAge = 112 + Math.random() * 40
+				this.coreSize = 8.6 * this.scale
+				this.calyxSize = 9 * this.scale
+				this.capWidth = 30 * this.scale
+				this.capHeight = 24 * this.scale
+				this.capLobes = 9
+				this.capMode = 'cluster'
+				this.headLift = 9 * this.scale
+
+				for (let layer = 0; layer < 4; layer += 1) {
+					const count = 5 + layer * 2
+					const spread = 2.1 + layer * 0.12
+					for (let i = 0; i < count; i += 1) {
+						const angle =
+							-Math.PI / 2 +
+							((count > 1 ? i / (count - 1) : 0) - 0.5) * spread +
+							(Math.random() - 0.5) * 0.22
+						this.addPetal(
+							angle,
+							6 + layer * 5 + Math.random() * 3,
+							7.5 + layer * 2.8 + Math.random() * 2.3,
+							layer,
+							1.34 + layer * 0.08
+						)
+					}
+				}
+				this.addCenterDots(6, 0.8, 4.2, 1.2, 2.2, this.darkColor)
+				return
+			}
+
+			if (this.type === 1) {
+				this.petalDrawChance = 0.56
+				this.coreSize = 6.8 * this.scale
+				this.calyxSize = 8 * this.scale
+				this.capWidth = 32 * this.scale
+				this.capHeight = 22 * this.scale
+				this.capLobes = 7
+				this.capMode = 'wing'
+				this.headLift = 12 * this.scale
+
+				const angle = -Math.PI / 2 + (Math.random() - 0.5) * 0.24
+				this.addPetal(angle - 0.95, 15, 10.5, 1, 1.5)
+				this.addPetal(angle - 0.35, 19, 13, 1, 1.35)
+				this.addPetal(angle + 0.35, 19, 13, 1, 1.35)
+				this.addPetal(angle + 0.95, 15, 10.5, 1, 1.5)
+				this.addPetal(angle + Math.PI, 11, 14.5, 0, 1.08)
+				this.addPetal(angle + Math.PI + 0.15, 8, 9.5, 0, 1.02)
+				this.addCenterDots(5, 1, 4.8, 1.2, 2.4, { h: 350, s: 100, l: 65 })
+				return
+			}
+
+			if (this.type === 2) {
+				this.petalDrawChance = 0.58
+				this.coreSize = 6.2 * this.scale
+				this.calyxSize = 9.4 * this.scale
+				this.capWidth = 25 * this.scale
+				this.capHeight = 22 * this.scale
+				this.capLobes = 6
+				this.capMode = 'cup'
+				this.headLift = 14 * this.scale
+
+				const angle = -Math.PI / 2 + (Math.random() - 0.5) * 0.2
+				this.addPetal(angle - 0.33, 15, 14, 1, 1.3)
+				this.addPetal(angle, 18, 16, 2, 1.22)
+				this.addPetal(angle + 0.33, 15, 14, 1, 1.3)
+				this.addPetal(angle - 0.7, 11, 8.2, 0, 1.14)
+				this.addPetal(angle + 0.7, 11, 8.2, 0, 1.14)
+				this.addCenterDots(4, 1, 3.8, 1.1, 1.8, palette.pollen)
+				return
+			}
+
+			if (this.type === 3) {
+				this.petalDrawChance = 0.55
+				this.maxAge = 106 + Math.random() * 36
+				this.coreSize = 8.4 * this.scale
+				this.calyxSize = 8.6 * this.scale
+				this.capWidth = 40 * this.scale
+				this.capHeight = 18 * this.scale
+				this.capLobes = 10
+				this.capMode = 'fan'
+				this.headLift = 12 * this.scale
+
+				const count = 7 + ((Math.random() * 3) | 0)
+				for (let i = 0; i < count; i += 1) {
+					const angle =
+						-Math.PI +
+						(count > 1 ? i / (count - 1) : 0) * Math.PI +
+						(Math.random() - 0.5) * 0.2
+					this.addPetal(angle, 15 + Math.random() * 12, 11 + Math.random() * 4.5, 1, 1.58)
+				}
+				for (let i = 0; i < 3; i += 1) {
+					const angle = -Math.PI / 2 + (Math.random() - 0.5) * 1.2
+					this.addPetal(angle, 9 + Math.random() * 5, 7.5 + Math.random() * 3, 0, 1.3)
+				}
+				this.addCenterDots(8, 1.2, 5.4, 1, 2, this.darkColor)
+				return
+			}
+
+			if (this.type === 4) {
+				this.petalDrawChance = 0.58
+				this.maxAge = 112 + Math.random() * 42
+				this.coreSize = 8 * this.scale
+				this.calyxSize = 9 * this.scale
+				this.capWidth = 34 * this.scale
+				this.capHeight = 24 * this.scale
+				this.capLobes = 11
+				this.capMode = 'cluster'
+				this.headLift = 10 * this.scale
+
+				for (let layer = 0; layer < 4; layer += 1) {
+					const count = 6 + layer * 3
+					const spread = 2.35 + layer * 0.12
+					for (let i = 0; i < count; i += 1) {
+						const angle =
+							-Math.PI / 2 +
+							((count > 1 ? i / (count - 1) : 0) - 0.5) * spread +
+							(Math.random() - 0.5) * 0.32
+						this.addPetal(
+							angle,
+							5 + layer * 4.8 + Math.random() * 2.8,
+							6.4 + layer * 2.4 + Math.random() * 2.2,
+							layer,
+							1.24 + layer * 0.08
+						)
+					}
+				}
+				this.addCenterDots(7, 1, 4.8, 1.4, 2.5, this.darkColor)
+				return
+			}
+
+			// type 5 — star
+			this.petalDrawChance = 0.54
+			this.coreSize = 6.8 * this.scale
+			this.calyxSize = 8.2 * this.scale
+			this.capWidth = 35 * this.scale
+			this.capHeight = 19 * this.scale
+			this.capLobes = 7
+			this.capMode = 'star'
+			this.headLift = 13 * this.scale
+
+			const start = -Math.PI / 2 + (Math.random() - 0.5) * 0.18
+			for (let i = 0; i < 6; i += 1) {
+				const angle =
+					start + ((Math.PI * 2) / 6) * i + (Math.random() - 0.5) * 0.2
+				this.addPetal(angle, 17 + Math.random() * 8, 8.5 + Math.random() * 3, i % 2, 1.5)
+			}
+			this.addCenterDots(6, 1.1, 4.8, 1.1, 2, palette.pollen)
+		}
+
+		draw(brush: WatercolorBrush) {
+			if (this.age > this.maxAge) return
+			this.age += 1
+
+			const growth = 0.2 + 0.8 * (this.age < 68 ? this.age / 68 : 1)
+			const headX = this.x + this.headTilt * this.headLift * 0.18 * growth
+			const headY = this.y - this.headLift * growth
+			const calyxX = headX + 4 * this.headTilt * this.scale * growth
+			const calyxY = headY + this.capHeight * (this.capMode === 'cup' ? 0.6 : 0.52)
+
+			if (this.age > 3) {
+				const open = Math.min(1, (this.age - 3) / 34)
+				const width = this.capWidth * open
+				const height = this.capHeight * open
+
+				if (this.capMode === 'cluster') {
+					for (let i = 0; i < this.capLobes; i += 1) {
+						if (Math.random() > 0.8) continue
+						const angle =
+							((Math.PI * 2) / this.capLobes) * i + this.headTilt * 0.3
+						const distance = height * (0.2 + Math.random() * 0.55)
+						const x =
+							headX +
+							Math.cos(angle) * distance * (0.95 + Math.random() * 0.3)
+						const y = headY + Math.sin(angle) * distance * 0.72
+						const color =
+							Math.random() > 0.6 ? this.lightColor : this.baseColor
+						brush.blob(
+							x,
+							y,
+							height * (0.34 + Math.random() * 0.2),
+							color,
+							0.032,
+							angle,
+							1.45
+						)
+					}
+				} else if (this.capMode === 'star') {
+					for (let i = 0; i < this.capLobes; i += 1) {
+						const angle =
+							((Math.PI * 2) / this.capLobes) * i + this.headTilt * 0.25
+						const distance = height * (0.46 + Math.random() * 0.3)
+						const x = headX + Math.cos(angle) * distance
+						const y = headY + Math.sin(angle) * distance * 0.82
+						brush.blob(x, y, height * 0.28, this.baseColor, 0.032, angle, 2.15)
+					}
+				} else if (this.capMode === 'wing') {
+					brush.blob(
+						headX - 0.26 * width,
+						headY - 0.18 * height,
+						0.5 * height,
+						this.lightColor,
+						0.03,
+						-0.35,
+						1.9
+					)
+					brush.blob(
+						headX + 0.26 * width,
+						headY - 0.18 * height,
+						0.5 * height,
+						this.lightColor,
+						0.03,
+						0.35,
+						1.9
+					)
+					brush.blob(
+						headX,
+						headY - 0.26 * height,
+						0.48 * height,
+						this.baseColor,
+						0.034,
+						0,
+						1.7
+					)
+					brush.blob(
+						headX,
+						headY + 0.15 * height,
+						0.42 * height,
+						this.baseColor,
+						0.034,
+						0,
+						1.35
+					)
+				} else {
+					const cupScale = this.capMode === 'cup' ? 0.9 : 1
+					for (let i = 0; i < this.capLobes; i += 1) {
+						if (Math.random() > 0.76) continue
+						const t = this.capLobes > 1 ? i / (this.capLobes - 1) : 0.5
+						const tiltOffset =
+							this.headTilt * (0.5 - Math.abs(t - 0.5)) * height * 1.25
+						const x =
+							headX +
+							(t - 0.5) * width * cupScale +
+							tiltOffset +
+							(Math.random() - 0.5) * width * 0.08
+						const y =
+							headY -
+							Math.sin(t * Math.PI) * height +
+							this.headTilt * (t - 0.5) * height * 0.2 +
+							(Math.random() - 0.5) * height * 0.12
+						const color =
+							Math.random() > 0.6 ? this.lightColor : this.baseColor
+						brush.blob(
+							x,
+							y,
+							height * (0.42 + Math.random() * 0.26),
+							color,
+							0.034,
+							0.35 * this.headTilt,
+							1.92
+						)
+					}
+				}
+			}
+
+			for (const petal of this.petals) {
+				if (Math.random() > this.petalDrawChance) continue
+
+				const distance = petal.distance * growth
+				const radius = petal.radius * growth * (1.02 + petal.layer * 0.02)
+				const outerX = headX + petal.cos * distance
+				const outerY = headY + petal.sin * distance
+				const midX = headX + petal.cos * distance * 0.58
+				const midY = headY + petal.sin * distance * 0.58
+				const innerX = headX + petal.cos * distance * 0.24
+				const innerY = headY + petal.sin * distance * 0.24
+
+				let color = this.baseColor
+				if (petal.layer === 0) {
+					color = this.darkColor
+				} else if (petal.layer >= 3) {
+					color = this.lightColor
+				} else if (Math.random() > 0.68) {
+					color = this.altColor
+				}
+
+				const angle =
+					this.type === 1 || this.type === 5
+						? petal.angle + petal.jitter
+						: this.headTilt * 0.35 + (Math.random() - 0.5) * 0.12
+
+				brush.blob(midX, midY, radius * 0.95, color, 0.05, angle, petal.stretch)
+				brush.blob(
+					outerX,
+					outerY,
+					radius * 0.72,
+					this.lightColor,
+					0.034,
+					angle + 0.08,
+					petal.stretch * 0.9
+				)
+				brush.blob(
+					innerX,
+					innerY,
+					radius * 0.46,
+					this.darkColor,
+					0.045,
+					angle - 0.06,
+					petal.stretch * 0.84
+				)
+
+				if (Math.random() > 0.64) {
+					const sideX = -petal.sin
+					const sideY = petal.cos
+					const shift = radius * 0.18
+					brush.blob(
+						midX + sideX * shift,
+						midY + sideY * shift,
+						radius * 0.65,
+						this.lightColor,
+						0.03,
+						petal.angle + 0.3,
+						petal.stretch * 0.92
+					)
+				}
+
+				if (Math.random() > 0.76) {
+					brush.stroke(
+						calyxX,
+						calyxY,
+						outerX,
+						outerY,
+						this.darkColor,
+						0.3 * this.scale,
+						0.04
+					)
+				}
+			}
+
+			if (this.age > 4) {
+				const amount = Math.min(1, (this.age - 4) / 22)
+				for (let i = 0; i < 3; i += 1) {
+					brush.blob(
+						headX + (Math.random() - 0.5) * 3.5 * this.scale,
+						headY + 0.9 * this.scale + (Math.random() - 0.5) * 2 * this.scale,
+						this.coreSize * amount * (0.65 + Math.random() * 0.45),
+						this.darkColor,
+						0.055,
+						0,
+						1.25
+					)
+				}
+			}
+
+			if (this.age > 6) {
+				const amount = Math.min(1, (this.age - 6) / 24)
+				brush.blob(
+					calyxX,
+					calyxY,
+					this.calyxSize * amount,
+					palette.calyx,
+					0.052,
+					0,
+					1.35
+				)
+				if (Math.random() > 0.52) {
+					const x = calyxX + (Math.random() - 0.5) * 4 * this.scale
+					const y = calyxY + (Math.random() - 0.5) * 2 * this.scale
+					brush.stroke(
+						x,
+						y,
+						x + (Math.random() - 0.5) * 10 * this.scale,
+						y - (3 + Math.random() * 5) * this.scale,
+						palette.calyx,
+						0.45 * this.scale,
+						0.06
+					)
+				}
+			}
+
+			if (this.age > 10 && this.centerDots.length > 0) {
+				const amount = Math.min(1, (this.age - 10) / 26)
+				for (const dot of this.centerDots) {
+					if (Math.random() > this.speckChance) continue
+					const distance = dot.distance * amount
+					const x =
+						headX +
+						dot.cos * distance +
+						(Math.random() - 0.5) * 1.5 * this.scale
+					const y =
+						headY +
+						dot.sin * distance +
+						(Math.random() - 0.5) * 1.5 * this.scale
+					brush.wash(x, y, dot.size * amount, dot.color, 0.075)
+				}
+			}
+		}
+	}
+
+	class Vase {
+		x: number
+		y: number
+		drawn: boolean
+
+		constructor(x: number, y: number) {
+			this.x = x
+			this.y = y
+			this.drawn = false
+		}
+
+		draw(ctx: CanvasRenderingContext2D) {
+			if (this.drawn) return
+
+			for (let i = 0; i < 80; i += 1) {
+				const t = i / 79
+				const y = this.y + (1 - t) * 210
+				const halfWidth = 86 * (0.32 + 0.68 * Math.sin(t * Math.PI))
+
+				ctx.beginPath()
+				ctx.moveTo(this.x - halfWidth, y)
+				ctx.lineTo(this.x + halfWidth, y)
+				ctx.lineWidth = 2.6 + Math.random() * 1.8
+				ctx.strokeStyle = `hsla(${palette.vase.h}, ${palette.vase.s}%, ${palette.vase.l - Math.random() * 10}%, 0.1)`
+				ctx.stroke()
+
+				if (Math.random() > 0.35) {
+					ctx.beginPath()
+					ctx.moveTo(this.x + halfWidth - 10, y)
+					ctx.lineTo(this.x + halfWidth, y)
+					ctx.lineWidth = 3.2
+					ctx.strokeStyle = `hsla(${palette.vase.h}, ${palette.vase.s}%, ${palette.vase.l - 30}%, 0.09)`
+					ctx.stroke()
+				}
+			}
+
+			this.drawn = true
+		}
+	}
+
+	type PollenParticle = {
+		x: number
+		y: number
+		vx: number
+		vy: number
+		size: number
+		opacity: number
+		drift: number
+	}
+
+	function createPollen(width: number, height: number): PollenParticle[] {
+		const particles: PollenParticle[] = []
+		for (let i = 0; i < 40; i += 1) {
+			particles.push({
+				x: Math.random() * width,
+				y: Math.random() * height,
+				vx: (Math.random() - 0.5) * 0.3,
+				vy: -0.15 - Math.random() * 0.25,
+				size: 0.6 + Math.random() * 1.4,
+				opacity: 0.15 + Math.random() * 0.3,
+				drift: Math.random() * Math.PI * 2
+			})
+		}
+		return particles
+	}
+
+	onMount(() => {
+		const displayCtx = canvasRef.getContext('2d', { alpha: true })
+		const paintCanvas = document.createElement('canvas')
+		const paintCtx = paintCanvas.getContext('2d', { alpha: true })
+
+		if (!displayCtx || !paintCtx) return
+
+		paintCtx.lineCap = 'round'
+		paintCtx.lineJoin = 'round'
+
+		const brush = new WatercolorBrush(paintCtx)
+
+		const state = {
+			width: 0,
+			height: 0,
+			stems: [] as Stem[],
+			flowers: [] as Flower[],
+			pollen: [] as PollenParticle[],
+			vase: null as Vase | null,
+			running: false
+		}
+
+		function drawPollen() {
+			for (const p of state.pollen) {
+				p.drift += 0.008
+				p.x += p.vx + 0.15 * Math.sin(p.drift)
+				p.y += p.vy
+
+				if (p.y < -5) {
+					p.y = state.height + 5
+					p.x = Math.random() * state.width
+				}
+				if (p.x < -5) {
+					p.x = state.width + 5
+				}
+				if (p.x > state.width + 5) {
+					p.x = -5
+				}
+
+				displayCtx!.beginPath()
+				displayCtx!.arc(p.x, p.y, p.size, 0, Math.PI * 2)
+				displayCtx!.fillStyle = `hsla(${palette.pollen.h}, ${palette.pollen.s}%, ${palette.pollen.l}%, ${p.opacity})`
+				displayCtx!.fill()
+			}
+		}
+
+		function compositeToScreen() {
+			displayCtx!.clearRect(0, 0, state.width, state.height)
+			displayCtx!.filter = 'url(#watercolor) blur(0.5px)'
+			displayCtx!.drawImage(paintCanvas, 0, 0)
+			displayCtx!.filter = 'none'
+			drawPollen()
+		}
+
+		function resize() {
+			const previousWidth = state.width || containerRef.clientWidth
+			const previousHeight = state.height || containerRef.clientHeight
+			let snapshot: HTMLCanvasElement | null = null
+
+			if (state.vase || state.stems.length || state.flowers.length) {
+				snapshot = document.createElement('canvas')
+				snapshot.width = paintCanvas.width
+				snapshot.height = paintCanvas.height
+				snapshot.getContext('2d')!.drawImage(paintCanvas, 0, 0)
+			}
+
+			state.width = containerRef.clientWidth
+			state.height = containerRef.clientHeight
+
+			canvasRef.width = state.width
+			canvasRef.height = state.height
+			paintCanvas.width = state.width
+			paintCanvas.height = state.height
+			paintCtx!.lineCap = 'round'
+			paintCtx!.lineJoin = 'round'
+
+			if (snapshot) {
+				const dx = (state.width - previousWidth) * 0.5
+				const dy = (state.height - previousHeight) * 0.5
+				paintCtx!.clearRect(0, 0, state.width, state.height)
+				paintCtx!.drawImage(snapshot, dx, dy)
+
+				if (state.vase) {
+					state.vase.x += dx
+					state.vase.y += dy
+				}
+
+				for (const stem of state.stems) {
+					stem.x += dx
+					stem.y += dy
+					stem.tip.x += dx
+					stem.tip.y += dy
+					for (const segment of stem.segments) {
+						segment.x += dx
+						segment.y += dy
+					}
+				}
+
+				for (const flower of state.flowers) {
+					flower.x += dx
+					flower.y += dy
+				}
+			}
+
+			if (!state.pollen.length) {
+				state.pollen = createPollen(state.width, state.height)
+			}
+		}
+
+		function seedBouquet() {
+			paintCtx!.clearRect(0, 0, state.width, state.height)
+			state.stems = []
+			state.flowers = []
+
+			const centerX = state.width / 2
+			const baseY = state.height * 0.6
+			state.vase = new Vase(centerX, baseY)
+			state.vase.draw(paintCtx!)
+
+			const count = state.width < 600 ? 8 : state.width < 1000 ? 11 : 12
+			const spread = 27.52 * (state.width < 600 ? 0.95 : 1.05)
+			const flowerTypes = [0, 1, 2, 3, 4, 5]
+
+			for (let i = flowerTypes.length - 1; i > 0; i -= 1) {
+				const j = (Math.random() * (i + 1)) | 0
+				const temp = flowerTypes[i]
+				flowerTypes[i] = flowerTypes[j]
+				flowerTypes[j] = temp
+			}
+
+			for (let i = 0; i < count; i += 1) {
+				const t = count > 1 ? i / (count - 1) - 0.5 : 0
+				const x =
+					centerX +
+					(t * spread * 1.18 + (Math.random() - 0.5) * spread * 0.28)
+				const angle =
+					-Math.PI / 2 + 0.14 * t + (Math.random() - 0.5) * 0.09
+				const stem = new Stem(
+					x,
+					baseY,
+					state.height * 0.16 + Math.random() * state.height * 0.12,
+					angle
+				)
+				stem.flowerTypeHint =
+					Math.random() > 0.82
+						? Stem.pickFlowerType()
+						: flowerTypes[i % 6]
+				state.stems.push(stem)
+			}
+
+			state.pollen = createPollen(state.width, state.height)
+			state.running = true
+		}
+
+		function plantAt(clientX: number, clientY: number) {
+			const rect = canvasRef.getBoundingClientRect()
+			const x = clientX - rect.left
+			const y = clientY - rect.top
+			const count = 1 + Math.floor(Math.random() * 3)
+
+			for (let i = 0; i < count; i += 1) {
+				const angle = -Math.PI / 2 + (Math.random() - 0.5) * 0.4
+				const stem = new Stem(
+					x + (Math.random() - 0.5) * 30,
+					y,
+					state.height * 0.08 + Math.random() * (state.height * 0.14),
+					angle
+				)
+				stem.flowerTypeHint = Stem.pickFlowerType()
+				state.stems.push(stem)
+			}
+
+			state.running = true
+		}
+
+		function frame() {
+			if (state.running) {
+				for (const stem of state.stems) {
+					const finished = stem.update()
+					stem.draw(brush)
+
+					if (finished && !stem.hasFlower) {
+						const tipIndex = Math.max(1, stem.segments.length - 2)
+						const tip = stem.segments[tipIndex]
+						state.flowers.push(
+							new Flower(
+								tip.x,
+								tip.y,
+								stem.flowerTypeHint,
+								0.64 + Math.random() * 0.17
+							)
+						)
+
+						if (stem.segments.length > 16 && Math.random() > 0.62) {
+							const branchIndex = Math.max(
+								4,
+								stem.segments.length -
+									(8 + ((Math.random() * 8) | 0))
+							)
+							const branch = stem.segments[branchIndex]
+							const sign = Math.random() < 0.5 ? -1 : 1
+							const bx =
+								branch.x +
+								-branch.sin * sign * (8 + Math.random() * 8)
+							const by =
+								branch.y +
+								branch.cos * sign * (2 + Math.random() * 4) -
+								(2 + Math.random() * 3)
+							state.flowers.push(
+								new Flower(
+									bx,
+									by,
+									(stem.flowerTypeHint +
+										2 +
+										((Math.random() * 2) | 0)) %
+										6,
+									0.42 + Math.random() * 0.14
+								)
+							)
+						}
+
+						stem.hasFlower = true
+					}
+				}
+
+				for (const flower of state.flowers) {
+					flower.draw(brush)
+				}
+			}
+
+			compositeToScreen()
+			requestAnimationFrame(frame)
+		}
+
+		resize()
+		seedBouquet()
+		frame()
+
+		function handleResize() {
+			resize()
+			compositeToScreen()
+		}
+
+		function handleClick(event: MouseEvent) {
+			plantAt(event.clientX, event.clientY)
+		}
+
+		window.addEventListener('resize', handleResize)
+		canvasRef.addEventListener('click', handleClick)
+
+		return () => {
+			window.removeEventListener('resize', handleResize)
+			canvasRef.removeEventListener('click', handleClick)
+		}
+	})
+</script>
+
+<main bind:this={containerRef} class="watercolor-root">
+	<svg class="svg-defs">
+		<filter id="watercolor">
+			<feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="5" result="noise" />
+			<feDisplacementMap in="SourceGraphic" in2="noise" scale="10" />
+			<feGaussianBlur stdDeviation="0.5" />
+		</filter>
+	</svg>
+
+	<p class="hint">Click anywhere to grow flowers</p>
+	<div class="canvas-wrap">
+		<canvas bind:this={canvasRef} id="art-canvas"></canvas>
+	</div>
+</main>
+
+<style>
+	.watercolor-root {
+		position: fixed;
+		inset: 0;
+		overflow: hidden;
+		background:
+			radial-gradient(at 30% 20%, rgba(253, 240, 236, 0.8) 0%, transparent 50%),
+			radial-gradient(at 70% 80%, rgba(252, 236, 232, 0.7) 0%, transparent 50%),
+			radial-gradient(
+				circle at center,
+				rgba(255, 255, 255, 0.35) 0%,
+				transparent 65%
+			),
+			linear-gradient(160deg, #fef8f6 0%, #fef5f5 30%, #fdf1ed 60%, #fcece8 100%);
+	}
+
+	.watercolor-root::before {
+		content: '';
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+		opacity: 0.3;
+		mix-blend-mode: multiply;
+		background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+		background-size: 256px 256px;
+	}
+
+	.svg-defs {
+		position: absolute;
+		width: 0;
+		height: 0;
+		pointer-events: none;
+	}
+
+	.canvas-wrap {
+		position: absolute;
+		inset: 0;
+	}
+
+	#art-canvas {
+		position: absolute;
+		inset: 0;
+		display: block;
+		width: 100%;
+		height: 100%;
+	}
+
+	.hint {
+		position: fixed;
+		top: 28px;
+		left: 50%;
+		transform: translateX(-50%);
+		color: rgba(74, 32, 32, 0.55);
+		letter-spacing: 0.08em;
+		font-size: 14px;
+		font-style: italic;
+		pointer-events: none;
+		z-index: 5;
+		font-family: Georgia, 'Times New Roman', serif;
+		margin: 0;
+	}
+</style>
