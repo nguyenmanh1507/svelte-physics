@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@babylonjs/core':
+        specifier: ^9.0.0
+        version: 9.0.0
       '@threlte/core':
         specifier: ^8.4.1
         version: 8.4.1(svelte@5.53.12)(three@0.183.2)
@@ -203,6 +206,9 @@ packages:
   '@babel/runtime@7.28.6':
     resolution: {integrity: sha512-05WQkdpL9COIMz4LjTxGpPNCdlpyimKppYNoJ5Di5EUObifl8t4tuLuUBBZEpoLYOmfvIWrsp9fCl0HoPRVTdA==}
     engines: {node: '>=6.9.0'}
+
+  '@babylonjs/core@9.0.0':
+    resolution: {integrity: sha512-Y4xbHFUw28X4EC5C7NOSzPCOaenxZQgztCB1QZ64y0C85FjZaq5DfWd6gy+EUYklbigmcMIFzCpLj78Wc8EwVw==}
 
   '@blazediff/core@1.9.1':
     resolution: {integrity: sha512-ehg3jIkYKulZh+8om/O25vkvSsXXwC+skXmyA87FFx6A/45eqOkZsBltMw/TVteb0mloiGT8oGRTcjRAz66zaA==}
@@ -2957,6 +2963,8 @@ snapshots:
   '@babel/helper-validator-identifier@7.28.5': {}
 
   '@babel/runtime@7.28.6': {}
+
+  '@babylonjs/core@9.0.0': {}
 
   '@blazediff/core@1.9.1': {}
 
