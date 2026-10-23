@@ -1,0 +1,13 @@
+diff --git a/dist/internal/GenericBinding.svelte b/dist/internal/GenericBinding.svelte
+index 63c831fa71dc9a24a47e250fc42b2b3b821f73a3..27fb86469bdc989ebd43e4aa7e8b5b5e2defad2e 100644
+--- a/dist/internal/GenericBinding.svelte
++++ b/dist/internal/GenericBinding.svelte
+@@ -8,7 +8,7 @@
+ 	export let value
+ 	export let ref = void 0
+ 	export let options = void 0
+-	const key = /* @__PURE__ */ Symbol('key')
++	const key = Symbol('key')
+ 	function getValue() {
+ 		return value
+ 	}

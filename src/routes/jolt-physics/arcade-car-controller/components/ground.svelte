@@ -2,7 +2,7 @@
 	import { T } from '@threlte/core'
 	import { useTexture } from '@threlte/extras'
 	import * as THREE from 'three'
-	import { JoltRigidBody } from '$lib/hooks/use-jolt'
+	import { JoltRigidBody } from '#lib/hooks/use-jolt/index.js'
 
 	const floorTexturePath = '/images/prototype-texture/Green/texture_01.png'
 	const floorTexture = useTexture(floorTexturePath)

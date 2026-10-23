@@ -2,9 +2,9 @@
 	import { T, useThrelte } from '@threlte/core'
 	import { Environment, Gizmo, OrbitControls } from '@threlte/extras'
 
-	import { Stats } from '$lib/components/stats'
-	import { JoltWorld } from '$lib/hooks/use-jolt'
-	// import { CameraLogger } from '$lib/components/camera-logger'
+	import { Stats } from '#lib/components/stats/index.js'
+	import { JoltWorld } from '#lib/hooks/use-jolt/index.js'
+	// import { CameraLogger } from '#lib/components/camera-logger/index.js'
 	import Ground from './ground.svelte'
 	import Car from './car.svelte'
 	import Taxi from './taxi.svelte'

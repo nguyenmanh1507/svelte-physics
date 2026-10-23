@@ -1,7 +1,7 @@
 <script lang="ts">
 	import './layout.css'
-	import favicon from '$lib/assets/favicon.svg'
-	import PageHeader from '$lib/components/page-header.svelte'
+	import favicon from '#lib/assets/favicon.svg'
+	import PageHeader from '#lib/components/page-header.svelte'
 
 	let { children } = $props()
 </script>

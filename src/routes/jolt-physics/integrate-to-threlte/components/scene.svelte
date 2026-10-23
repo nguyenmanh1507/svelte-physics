@@ -3,7 +3,7 @@
 	import { SvelteMap } from 'svelte/reactivity'
 	import { T } from '@threlte/core'
 	import { Gizmo, OrbitControls } from '@threlte/extras'
-	import { JoltRigidBody, JoltWorld } from '$lib/hooks/use-jolt'
+	import { JoltRigidBody, JoltWorld } from '#lib/hooks/use-jolt/index.js'
 
 	const showHelper = false
 

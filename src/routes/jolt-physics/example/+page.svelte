@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { JoltExample } from '$lib/components/jolt-example'
+	import { JoltExample } from '#lib/components/jolt-example/index.js'
 </script>
 
 <svelte:head>

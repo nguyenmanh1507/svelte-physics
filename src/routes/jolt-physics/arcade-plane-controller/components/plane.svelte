@@ -11,7 +11,7 @@
 		toJoltRVec3,
 		useJoltWorld,
 		useRigidBody,
-	} from '$lib/hooks/use-jolt'
+	} from '#lib/hooks/use-jolt/index.js'
 	import {
 		STUNT_CONTROLLER_CONFIG,
 		createInitialPlaneState,

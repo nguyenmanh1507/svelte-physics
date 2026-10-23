@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte'
-	import { CodeHighlight } from '$lib/components/code-highlight'
+	import { CodeHighlight } from '#lib/components/code-highlight/index.js'
 	import { Vector2 } from 'three'
 
 	let canvasRef: HTMLCanvasElement | undefined

@@ -3,13 +3,11 @@
 	// import { T } from '@threlte/core'
 	// import { Gizmo, OrbitControls } from '@threlte/extras'
 	import * as THREE from 'three'
-	import {
-		EffectComposer,
-		HDRLoader,
-		OrbitControls,
-		RenderPass,
-		UnrealBloomPass,
-	} from 'three/examples/jsm/Addons.js'
+	import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
+	import { HDRLoader } from 'three/examples/jsm/loaders/HDRLoader.js'
+	import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js'
+	import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
+	import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js'
 
 	let container: HTMLDivElement
 

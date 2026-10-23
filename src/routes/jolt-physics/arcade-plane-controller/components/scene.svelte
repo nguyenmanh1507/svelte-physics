@@ -2,12 +2,12 @@
 	import * as THREE from 'three'
 	import { T } from '@threlte/core'
 	import { Sky } from '@threlte/extras'
-	import { JoltWorld } from '$lib/hooks/use-jolt'
+	import { JoltWorld } from '#lib/hooks/use-jolt/index.js'
 	import FollowCamera from './follow-camera.svelte'
 	import Ground from './ground.svelte'
 	import Plane from './plane.svelte'
 	import Trail from './trail.svelte'
-	import { Stats } from '$lib/components/stats'
+	import { Stats } from '#lib/components/stats/index.js'
 
 	let planeTarget = $state<THREE.Object3D | undefined>(undefined)
 	let trailData = $state<{

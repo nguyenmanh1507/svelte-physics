@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Match3 } from '$lib/components/match-3'
+	import { Match3 } from '#lib/components/match-3/index.js'
 </script>
 
 <svelte:head>

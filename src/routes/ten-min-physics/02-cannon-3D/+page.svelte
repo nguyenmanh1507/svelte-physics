@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte'
-	import { CodeHighlight } from '~/lib/components/code-highlight'
+	import { CodeHighlight } from '#lib/components/code-highlight/index.js'
 	import * as THREE from 'three'
 	import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 

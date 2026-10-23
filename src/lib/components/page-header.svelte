@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { resolve } from '$app/paths'
 	import { page } from '$app/state'
-	import { cn } from '$lib/utils/tailwind'
-	import * as NavigationMenu from '$lib/components/ui/navigation-menu/index.js'
+	import { cn } from '#lib/utils/tailwind.js'
+	import * as NavigationMenu from '#lib/components/ui/navigation-menu/index.js'
 	import type { HTMLAttributes } from 'svelte/elements'
 
 	// Menu item types
@@ -183,7 +183,7 @@
 
 					{#if isMenuDropdown(item)}
 						<NavigationMenu.Content class="p-0">
-							<ul class="min-w-[200px]">
+							<ul class="min-w-50">
 								{#each item.children as child, i (i)}
 									{@render ListItem({
 										href: child.href,

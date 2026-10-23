@@ -1,6 +1,6 @@
 <script lang="ts">
-	import JoltSvelte from '$lib/components/jolt-svelte/jolt-svelte.svelte'
-	import { CodeHighlight } from '$lib/components/code-highlight'
+	import JoltSvelte from '#lib/components/jolt-svelte/jolt-svelte.svelte'
+	import { CodeHighlight } from '#lib/components/code-highlight/index.js'
 
 	const cdnExample = [
 		'<script src="https://unpkg.com/three@latest/build/three.min.js"></' + 'script>',

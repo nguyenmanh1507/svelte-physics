@@ -6,3 +6,5 @@ minimumReleaseAgeExclude:
   - '@babylonjs/inspector@9.32.0'
   - '@babylonjs/loaders@9.32.0'
   - bits-ui@2.20.1
+patchedDependencies:
+  svelte-tweakpane-ui@1.6.2: patches/svelte-tweakpane-ui@1.6.2.patch

@@ -1,12 +1,12 @@
 <script lang="ts">
 	import * as THREE from 'three'
-	import { OrbitControls } from 'three/examples/jsm/Addons.js'
+	import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 	import { onMount } from 'svelte'
 	import initJolt from 'jolt-physics'
 	import type JoltType from 'jolt-physics'
 
-	import { getRandomQuat } from '$lib/utils/jolt-utils'
-	import { Stats } from '$lib/components/stats'
+	import { getRandomQuat } from '#lib/utils/jolt-utils.js'
+	import { Stats } from '#lib/components/stats/index.js'
 
 	let canvas: HTMLCanvasElement | undefined
 	let container: HTMLDivElement | undefined

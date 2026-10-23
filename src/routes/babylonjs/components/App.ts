@@ -1,26 +1,21 @@
 import '@babylonjs/core/Debug/debugLayer'
-import '@babylonjs/inspector'
 import '@babylonjs/loaders/glTF'
-import {
-	ArcRotateCamera,
-	Color4,
-	Effect,
-	Engine,
-	FreeCamera,
-	HemisphericLight,
-	MeshBuilder,
-	Scene,
-	Sound,
-	Vector3,
-} from '@babylonjs/core'
-import {
-	AdvancedDynamicTexture,
-	Button,
-	Control,
-	Image,
-	Rectangle,
-	TextBlock,
-} from '@babylonjs/gui'
+import { Sound } from '@babylonjs/core/Audio/sound.js'
+import { ArcRotateCamera } from '@babylonjs/core/Cameras/arcRotateCamera.js'
+import { FreeCamera } from '@babylonjs/core/Cameras/freeCamera.js'
+import { Engine } from '@babylonjs/core/Engines/engine.js'
+import { HemisphericLight } from '@babylonjs/core/Lights/hemisphericLight.js'
+import { Effect } from '@babylonjs/core/Materials/effect.js'
+import { Color4 } from '@babylonjs/core/Maths/math.color.js'
+import { Vector3 } from '@babylonjs/core/Maths/math.vector.js'
+import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder.js'
+import { Scene } from '@babylonjs/core/scene.js'
+import { AdvancedDynamicTexture } from '@babylonjs/gui/2D/advancedDynamicTexture.js'
+import { Button } from '@babylonjs/gui/2D/controls/button.js'
+import { Control } from '@babylonjs/gui/2D/controls/control.js'
+import { Image } from '@babylonjs/gui/2D/controls/image.js'
+import { Rectangle } from '@babylonjs/gui/2D/controls/rectangle.js'
+import { TextBlock } from '@babylonjs/gui/2D/controls/textBlock.js'
 
 enum State {
 	START,

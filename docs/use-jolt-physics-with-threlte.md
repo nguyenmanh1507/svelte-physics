@@ -121,7 +121,7 @@ In `scene.svelte`, wrap physics content in `JoltWorld`:
 For custom behavior, use `useRigidBody` directly:
 
 ```ts
-import { useRigidBody } from '$lib/hooks/use-jolt'
+import { useRigidBody } from '#lib/hooks/use-jolt/index.js'
 
 const rigidBody = useRigidBody({
 	shape: { type: 'sphere', radius: 1 },
@@ -147,7 +147,7 @@ Then attach to mesh:
 Use the API from:
 
 ```ts
-import { JoltWorld, JoltRigidBody, useJoltWorld, useRigidBody } from '$lib/hooks/use-jolt'
+import { JoltWorld, JoltRigidBody, useJoltWorld, useRigidBody } from '#lib/hooks/use-jolt/index.js'
 ```
 
 ## 8. Kinematic arcade controller pattern
