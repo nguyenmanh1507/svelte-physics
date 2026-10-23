@@ -2,6 +2,7 @@
 	import { useTask } from '@threlte/core'
 	import type { Snippet } from 'svelte'
 	import { onDestroy, onMount, setContext } from 'svelte'
+	import { SvelteMap } from 'svelte/reactivity'
 	import { get, writable } from 'svelte/store'
 	import type JoltType from 'jolt-physics/wasm-compat'
 	import type * as THREE from 'three'
@@ -39,8 +40,8 @@
 	const isReady = writable(false)
 	const error = writable<unknown>(null)
 
-	const syncedBodies = new Map<THREE.Object3D, JoltType.Body>()
-	const createdBodies = new Map<number, JoltType.BodyID>()
+	const syncedBodies = new SvelteMap<THREE.Object3D, JoltType.Body>()
+	const createdBodies = new SvelteMap<number, JoltType.BodyID>()
 
 	function resolveMotionType(motionType?: MotionType): MotionType {
 		return motionType ?? DEFAULT_MOTION_TYPE

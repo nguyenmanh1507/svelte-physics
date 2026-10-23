@@ -1,6 +1,13 @@
 <script lang="ts">
 	import JoltSvelte from '$lib/components/jolt-svelte/jolt-svelte.svelte'
 	import { CodeHighlight } from '$lib/components/code-highlight'
+
+	const cdnExample = [
+		'<script src="https://unpkg.com/three@latest/build/three.min.js"></' + 'script>',
+		'<script type="module">',
+		'  import initJolt from "https://www.unpkg.com/jolt-physics/dist/jolt-physics.wasm-compat.js";',
+		'</' + 'script>',
+	].join('\n')
 </script>
 
 <div class="mockup-window border-base-300 w-full border bg-blue-200">
@@ -27,13 +34,7 @@ import initJolt from 'jolt-physics';  // or 'jolt-physics/wasm-compat'
 
 <p class="my-4">Option B: Using CDN</p>
 
-<CodeHighlight
-	code={`\<script src="https://unpkg.com/three@latest/build/three.min.js"\>\</script\>
-\<script type="module"\>
-  import initJolt from "https:\/\/www.unpkg.com\/jolt-physics\/dist\/jolt-physics.wasm-compat.js";
-\</script\>
-`}
-/>
+<CodeHighlight code={cdnExample} />
 
 <h2 class="mt-8 mb-4 text-2xl font-bold">Step 2: Initialize Jolt Physics</h2>
 <p>Jolt is a WASM module that needs to be initialized asynchronously:</p>

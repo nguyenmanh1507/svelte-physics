@@ -1,4 +1,8 @@
 allowBuilds:
-  esbuild: set this to true or false
-onlyBuiltDependencies:
-  - esbuild
+  esbuild: true
+minimumReleaseAgeExclude:
+  - '@babylonjs/core@9.32.0'
+  - '@babylonjs/gui@9.32.0'
+  - '@babylonjs/inspector@9.32.0'
+  - '@babylonjs/loaders@9.32.0'
+  - bits-ui@2.20.1

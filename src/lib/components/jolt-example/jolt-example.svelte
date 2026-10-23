@@ -12,7 +12,6 @@
 	let container: HTMLDivElement | undefined
 
 	const clock = new THREE.Clock()
-	let time = 0
 
 	// Object layers
 	const LAYER_NON_MOVING = 0
@@ -99,7 +98,6 @@
 	let renderer: THREE.WebGLRenderer
 	let camera: THREE.PerspectiveCamera
 	let scene: THREE.Scene
-	let controls: OrbitControls
 
 	function onWindowResize() {
 		if (!container) return
@@ -131,7 +129,7 @@
 		dirLight.position.set(10, 10, 5)
 		scene.add(dirLight)
 
-		controls = new OrbitControls(camera, renderer.domElement)
+		new OrbitControls(camera, renderer.domElement)
 
 		window.addEventListener('resize', onWindowResize)
 	}
@@ -144,8 +142,6 @@
 		deltaTime = Math.min(deltaTime, 1.0 / 30.0)
 
 		// onExampleUpdate(time, deltaTime)
-
-		time += deltaTime
 
 		updatePhysics(deltaTime)
 
@@ -241,23 +237,25 @@
 		let threeObject: THREE.Object3D
 		const shape = body.GetShape()
 		switch (shape.GetSubType()) {
-			case Jolt.EShapeSubType_Box:
-				let boxShape = Jolt.castObject(shape, Jolt.BoxShape)
-				let extent = wrapVec3(boxShape.GetHalfExtent()).multiplyScalar(2)
+			case Jolt.EShapeSubType_Box: {
+				const boxShape = Jolt.castObject(shape, Jolt.BoxShape)
+				const extent = wrapVec3(boxShape.GetHalfExtent()).multiplyScalar(2)
 				threeObject = new THREE.Mesh(
 					new THREE.BoxGeometry(extent.x, extent.y, extent.z, 1, 1, 1),
 					material
 				)
 				break
-			case Jolt.EShapeSubType_Sphere:
-				let sphereShape = Jolt.castObject(shape, Jolt.SphereShape)
+			}
+			case Jolt.EShapeSubType_Sphere: {
+				const sphereShape = Jolt.castObject(shape, Jolt.SphereShape)
 				threeObject = new THREE.Mesh(
 					new THREE.SphereGeometry(sphereShape.GetRadius(), 32, 32),
 					material
 				)
 				break
-			case Jolt.EShapeSubType_Capsule:
-				let capsuleShape = Jolt.castObject(shape, Jolt.CapsuleShape)
+			}
+			case Jolt.EShapeSubType_Capsule: {
+				const capsuleShape = Jolt.castObject(shape, Jolt.CapsuleShape)
 				threeObject = new THREE.Mesh(
 					new THREE.CapsuleGeometry(
 						capsuleShape.GetRadius(),
@@ -268,8 +266,9 @@
 					material
 				)
 				break
-			case Jolt.EShapeSubType_Cylinder:
-				let cylinderShape = Jolt.castObject(shape, Jolt.CylinderShape)
+			}
+			case Jolt.EShapeSubType_Cylinder: {
+				const cylinderShape = Jolt.castObject(shape, Jolt.CylinderShape)
 				threeObject = new THREE.Mesh(
 					new THREE.CylinderGeometry(
 						cylinderShape.GetRadius(),
@@ -281,6 +280,7 @@
 					material
 				)
 				break
+			}
 			default:
 				if (body.GetBodyType() == Jolt.EBodyType_SoftBody)
 					threeObject = getSoftBodyMesh(body, material)
@@ -310,6 +310,8 @@
 		addToThreeScene(body, color)
 	}
 
+	// Retained as an example helper for spawning additional randomized bodies.
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	function generateObjects() {
 		if (!Jolt) return
 

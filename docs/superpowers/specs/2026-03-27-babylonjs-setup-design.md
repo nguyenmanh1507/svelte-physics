@@ -38,14 +38,14 @@ The script block must use `lang="ts"`. Required imports:
 ```ts
 import { onMount } from 'svelte'
 import {
-  Engine,
-  Scene,
-  ArcRotateCamera,
-  HemisphericLight,
-  MeshBuilder,
-  StandardMaterial,
-  Vector3,
-  Color3,
+	Engine,
+	Scene,
+	ArcRotateCamera,
+	HemisphericLight,
+	MeshBuilder,
+	StandardMaterial,
+	Vector3,
+	Color3,
 } from '@babylonjs/core'
 ```
 
@@ -59,51 +59,51 @@ import {
 
 ```ts
 onMount(() => {
-  if (!canvas) return
+	if (!canvas) return
 
-  // 1. Engine
-  const engine = new Engine(canvas, true) // true = antialias
-  engine.resize() // sync render buffer to CSS-sized canvas immediately
+	// 1. Engine
+	const engine = new Engine(canvas, true) // true = antialias
+	engine.resize() // sync render buffer to CSS-sized canvas immediately
 
-  // 2. Scene
-  const scene = new Scene(engine)
+	// 2. Scene
+	const scene = new Scene(engine)
 
-  // 3. Camera
-  const camera = new ArcRotateCamera('camera', -Math.PI / 2, Math.PI / 3, 8, Vector3.Zero(), scene)
-  camera.attachControl(false) // false = keep preventDefault on pointer events; no canvas arg in v6+
+	// 3. Camera
+	const camera = new ArcRotateCamera('camera', -Math.PI / 2, Math.PI / 3, 8, Vector3.Zero(), scene)
+	camera.attachControl(false) // false = keep preventDefault on pointer events; no canvas arg in v6+
 
-  // 4. Light
-  new HemisphericLight('light', Vector3.Up(), scene)
+	// 4. Light
+	new HemisphericLight('light', Vector3.Up(), scene)
 
-  // 5. Box
-  const box = MeshBuilder.CreateBox('box', { size: 1 }, scene)
-  box.position.y = 1
-  const boxMat = new StandardMaterial('boxMat', scene)
-  boxMat.diffuseColor = new Color3(0.39, 0.58, 0.93) // cornflower blue
-  box.material = boxMat
+	// 5. Box
+	const box = MeshBuilder.CreateBox('box', { size: 1 }, scene)
+	box.position.y = 1
+	const boxMat = new StandardMaterial('boxMat', scene)
+	boxMat.diffuseColor = new Color3(0.39, 0.58, 0.93) // cornflower blue
+	box.material = boxMat
 
-  // 6. Ground
-  const ground = MeshBuilder.CreateGround('ground', { width: 6, height: 6 }, scene)
-  const groundMat = new StandardMaterial('groundMat', scene)
-  groundMat.diffuseColor = new Color3(0.5, 0.5, 0.5) // neutral gray
-  ground.material = groundMat
+	// 6. Ground
+	const ground = MeshBuilder.CreateGround('ground', { width: 6, height: 6 }, scene)
+	const groundMat = new StandardMaterial('groundMat', scene)
+	groundMat.diffuseColor = new Color3(0.5, 0.5, 0.5) // neutral gray
+	ground.material = groundMat
 
-  // 7. Resize listener (must be declared before cleanup return)
-  const resizeHandler = () => engine.resize()
-  window.addEventListener('resize', resizeHandler)
+	// 7. Resize listener (must be declared before cleanup return)
+	const resizeHandler = () => engine.resize()
+	window.addEventListener('resize', resizeHandler)
 
-  // 8. Render loop
-  engine.runRenderLoop(() => {
-    box.rotation.y += 0.01 // fixed delta — acceptable for a demo
-    scene.render()
-  })
+	// 8. Render loop
+	engine.runRenderLoop(() => {
+		box.rotation.y += 0.01 // fixed delta — acceptable for a demo
+		scene.render()
+	})
 
-  // 9. Cleanup
-  return () => {
-    window.removeEventListener('resize', resizeHandler)
-    engine.stopRenderLoop()
-    engine.dispose()
-  }
+	// 9. Cleanup
+	return () => {
+		window.removeEventListener('resize', resizeHandler)
+		engine.stopRenderLoop()
+		engine.dispose()
+	}
 })
 ```
 
@@ -117,7 +117,7 @@ The canvas is wrapped in the same DaisyUI `mockup-window` pattern used in other 
 
 ```html
 <div class="mockup-window border-base-300 relative w-full border bg-amber-400">
-  <canvas class="aspect-video w-full" bind:this={canvas}></canvas>
+	<canvas class="aspect-video w-full" bind:this="{canvas}"></canvas>
 </div>
 ```
 

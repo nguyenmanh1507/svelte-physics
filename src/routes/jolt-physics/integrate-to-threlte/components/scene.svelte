@@ -1,5 +1,6 @@
 <script lang="ts">
 	import * as THREE from 'three'
+	import { SvelteMap } from 'svelte/reactivity'
 	import { T } from '@threlte/core'
 	import { Gizmo, OrbitControls } from '@threlte/extras'
 	import { JoltRigidBody, JoltWorld } from '$lib/hooks/use-jolt'
@@ -25,7 +26,7 @@
 	]
 	const sphereTexturePaths = prototypeTexturePaths.filter((path) => path !== floorTexturePath)
 	const textureLoader = new THREE.TextureLoader()
-	const textureCache = new Map<string, THREE.Texture>()
+	const textureCache = new SvelteMap<string, THREE.Texture>()
 
 	function loadTexture(path: string, repeatX = 1, repeatY = 1) {
 		const texture = textureLoader.load(path)

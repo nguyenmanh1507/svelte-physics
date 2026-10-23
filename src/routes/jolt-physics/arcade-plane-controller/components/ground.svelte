@@ -13,7 +13,7 @@
 	})
 </script>
 
-{#await floorTexture then map}
+{#await $floorTexture then map}
 	<JoltRigidBody
 		shape={{ type: 'box', halfExtent: [50, 0.5, 50], convexRadius: 0.05 }}
 		motionType="static"

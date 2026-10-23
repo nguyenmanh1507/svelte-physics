@@ -13,6 +13,7 @@
 ### Task 1: Add regression test
 
 **Files:**
+
 - Create: `src/routes/js-physics/bouncing-ball/page.svelte.spec.ts`
 - Test: `src/routes/js-physics/bouncing-ball/page.svelte.spec.ts`
 
@@ -36,6 +37,7 @@ Expected: FAIL because no canvas is created yet.
 ### Task 2: Implement q5 mount
 
 **Files:**
+
 - Modify: `src/routes/js-physics/bouncing-ball/+page.svelte`
 - Test: `src/routes/js-physics/bouncing-ball/page.svelte.spec.ts`
 
@@ -55,6 +57,7 @@ Expected: PASS
 ### Task 3: Verify page integrity
 
 **Files:**
+
 - Modify: `src/routes/js-physics/bouncing-ball/+page.svelte`
 
 **Step 1: Run project checks**

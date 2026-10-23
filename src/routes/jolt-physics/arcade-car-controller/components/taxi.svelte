@@ -4,6 +4,7 @@ Command: npx @threlte/gltf@3.0.1 taxi.glb
 -->
 
 <script>
+	/* eslint-disable svelte/require-store-reactive-access */
 	import { T } from '@threlte/core'
 	import { useGltf } from '@threlte/extras'
 

@@ -34,7 +34,7 @@ class App {
 	private _scene: Scene
 	private _canvas: HTMLCanvasElement
 	private _engine: Engine
-	private _transition: boolean
+	private _transition = false
 
 	// Scene - related
 	private _state: State = State.START
@@ -81,18 +81,12 @@ class App {
 		camera.setTarget(Vector3.Zero())
 
 		// SECTION: --SOUND--
-		const start = new Sound(
-			'startSong',
-			'/summer-festival/sounds/copycat(revisited).mp3',
-			scene,
-			() => {},
-			{
-				volume: 0.25,
-				loop: true,
-				autoplay: true,
-			}
-		)
-		const sfx = new Sound('selection', '/summer-festival/sounds/vgmenuselect.mp3', scene, () => {})
+		new Sound('startSong', '/summer-festival/sounds/copycat(revisited).mp3', scene, () => {}, {
+			volume: 0.25,
+			loop: true,
+			autoplay: true,
+		})
+		new Sound('selection', '/summer-festival/sounds/vgmenuselect.mp3', scene, () => {})
 
 		// SECTION: --GUI--
 		const guiMenu = AdvancedDynamicTexture.CreateFullscreenUI('UI')
@@ -142,7 +136,6 @@ gl_FragColor = baseColor;
 	`
 		)
 
-		let fadeLevel = 1
 		this._transition = false
 	}
 

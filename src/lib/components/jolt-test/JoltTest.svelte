@@ -82,6 +82,8 @@
 		renderer.setSize(container.clientWidth, container.clientHeight)
 		renderer.setClearColor(0x1a1a2e)
 		renderer.shadowMap.enabled = true
+		// Three.js owns its renderer canvas inside this container.
+		// eslint-disable-next-line svelte/no-dom-manipulating
 		container.appendChild(renderer.domElement)
 
 		// Create camera

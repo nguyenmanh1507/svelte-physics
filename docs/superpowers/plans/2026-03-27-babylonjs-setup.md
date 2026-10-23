@@ -12,16 +12,17 @@
 
 ## File Map
 
-| File | Action | Responsibility |
-|---|---|---|
-| `src/routes/babylonjs/+page.svelte` | Modify | BabylonJS scene: engine mount, scene setup, cleanup |
-| `src/lib/components/page-header.svelte` | Modify | Add BabylonJS nav entry |
+| File                                    | Action | Responsibility                                      |
+| --------------------------------------- | ------ | --------------------------------------------------- |
+| `src/routes/babylonjs/+page.svelte`     | Modify | BabylonJS scene: engine mount, scene setup, cleanup |
+| `src/lib/components/page-header.svelte` | Modify | Add BabylonJS nav entry                             |
 
 ---
 
 ### Task 1: Install `@babylonjs/core`
 
 **Files:**
+
 - Modify: `package.json` (via pnpm)
 
 - [ ] **Step 1: Install the package**
@@ -52,6 +53,7 @@ git commit -m "feat: install @babylonjs/core"
 ### Task 2: Add BabylonJS to the nav
 
 **Files:**
+
 - Modify: `src/lib/components/page-header.svelte` (line ~124 — after the closing `]` of the last child array in `menuItems`)
 
 - [ ] **Step 1: Open `src/lib/components/page-header.svelte` and locate the `menuItems` array**
@@ -108,6 +110,7 @@ git commit -m "feat: add BabylonJS to nav"
 ### Task 3: Implement the BabylonJS page
 
 **Files:**
+
 - Modify: `src/routes/babylonjs/+page.svelte`
 
 - [ ] **Step 1: Replace the file contents**
@@ -141,7 +144,14 @@ Replace `src/routes/babylonjs/+page.svelte` with:
 		const scene = new Scene(engine)
 
 		// Camera
-		const camera = new ArcRotateCamera('camera', -Math.PI / 2, Math.PI / 3, 8, Vector3.Zero(), scene)
+		const camera = new ArcRotateCamera(
+			'camera',
+			-Math.PI / 2,
+			Math.PI / 3,
+			8,
+			Vector3.Zero(),
+			scene
+		)
 		camera.attachControl(false)
 
 		// Light
@@ -202,6 +212,7 @@ pnpm dev
 ```
 
 Open `http://localhost:5173/babylonjs`. You should see:
+
 - A cornflower-blue rotating cube above a gray ground plane
 - An arc-rotate camera (drag to orbit, scroll to zoom)
 - The page accessible from the `BabylonJS` nav link

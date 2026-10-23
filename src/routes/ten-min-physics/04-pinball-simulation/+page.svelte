@@ -606,9 +606,7 @@
 Score <span class="text-primary">{score}</span>
 <br />
 
-<div
-	class="mockup-window border-base-300 relative mx-auto mt-5 w-full border bg-amber-400"
->
+<div class="mockup-window border-base-300 relative mx-auto mt-5 w-full border bg-amber-400">
 	<div class="h-full w-full bg-gray-50" bind:this={canvasContainerRef}>
 		<canvas bind:this={canvasRef}></canvas>
 	</div>

@@ -133,6 +133,8 @@
 		renderer.outputColorSpace = THREE.SRGBColorSpace
 		renderer.toneMapping = THREE.ACESFilmicToneMapping
 		renderer.toneMappingExposure = 0.35
+		// Three.js owns its renderer canvas inside this container.
+		// eslint-disable-next-line svelte/no-dom-manipulating
 		container.appendChild(renderer.domElement)
 
 		const controls = new OrbitControls(camera, renderer.domElement)

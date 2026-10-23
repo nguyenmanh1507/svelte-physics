@@ -32,12 +32,6 @@
 	const wrapQuat = (q: JoltType.Quat) =>
 		new THREE.Quaternion(q.GetX(), q.GetY(), q.GetZ(), q.GetW())
 
-	// Convert Three.js to Jolt
-	const unwrapVec3 = (v: THREE.Vector3) => new Jolt!.Vec3(v.x, v.y, v.z)
-	const unwrapRVec3 = (v: THREE.Vector3) => new Jolt!.RVec3(v.x, v.y, v.z)
-	const unwrapQuat = (q: THREE.Quaternion) => new Jolt!.Quat(q.x, q.y, q.z, q.w)
-	// ================================
-
 	function setupCollisionFiltering(settings: JoltType.JoltSettings) {
 		if (!Jolt) return
 
@@ -95,6 +89,8 @@
 		renderer.setSize(container.clientWidth, container.clientHeight)
 		renderer.setClearColor(0x1a1a2e)
 		renderer.shadowMap.enabled = true
+		// Three.js owns its renderer canvas inside this container.
+		// eslint-disable-next-line svelte/no-dom-manipulating
 		container.appendChild(renderer.domElement)
 
 		// Camera

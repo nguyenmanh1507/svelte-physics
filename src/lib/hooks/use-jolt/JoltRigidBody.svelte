@@ -8,9 +8,9 @@
 		children: Snippet<[{ oncreate: (target: THREE.Object3D) => void }]>
 	}
 
-	let props: RigidBodyProps = $props()
+	let { children, ...rigidBodyOptions }: RigidBodyProps = $props()
 
-	const { oncreate } = useRigidBody(() => props)
+	const { oncreate } = useRigidBody(() => rigidBodyOptions)
 </script>
 
-{@render props.children({ oncreate })}
+{@render children({ oncreate })}

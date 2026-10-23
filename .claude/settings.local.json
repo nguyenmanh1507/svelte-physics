@@ -1,22 +1,22 @@
 {
-  "permissions": {
-    "allow": [
-      "Bash(npx svelte-check:*)",
-      "Bash(find /home/ngmanh/Sandbox/svelte-physics -path */app/paths* -not -path */node_modules/.pnpm/*)",
-      "Bash(npx eslint:*)",
-      "Bash(npx tsc:*)",
-      "Bash(ls node_modules/q5/*.d.ts)",
-      "Bash(ls node_modules/p5/lib/*.d.ts)",
-      "Bash(git add:*)",
-      "Bash(git commit:*)",
-      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); deps={**d.get\\(''''dependencies'''',{}\\),**d.get\\(''''devDependencies'''',{}\\)}; print\\(deps.get\\(''''@babylonjs/core'''',''''NOT FOUND''''\\)\\)\")",
-      "Bash(pnpm add:*)",
-      "Bash(pnpm list:*)",
-      "Bash(node -e \"const babylon = require\\(''@babylonjs/core''\\); console.log\\(''Successfully imported @babylonjs/core''\\);\")",
-      "Bash(npm view:*)",
-      "Bash(pnpm check:*)",
-      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5173/babylonjs)",
-      "Bash(node -e \"const p=require\\(''./package.json''\\); console.log\\(p.dependencies?.[''@babylonjs/core''] || ''NOT FOUND''\\)\")"
-    ]
-  }
+	"permissions": {
+		"allow": [
+			"Bash(npx svelte-check:*)",
+			"Bash(find /home/ngmanh/Sandbox/svelte-physics -path */app/paths* -not -path */node_modules/.pnpm/*)",
+			"Bash(npx eslint:*)",
+			"Bash(npx tsc:*)",
+			"Bash(ls node_modules/q5/*.d.ts)",
+			"Bash(ls node_modules/p5/lib/*.d.ts)",
+			"Bash(git add:*)",
+			"Bash(git commit:*)",
+			"Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); deps={**d.get\\(''''dependencies'''',{}\\),**d.get\\(''''devDependencies'''',{}\\)}; print\\(deps.get\\(''''@babylonjs/core'''',''''NOT FOUND''''\\)\\)\")",
+			"Bash(pnpm add:*)",
+			"Bash(pnpm list:*)",
+			"Bash(node -e \"const babylon = require\\(''@babylonjs/core''\\); console.log\\(''Successfully imported @babylonjs/core''\\);\")",
+			"Bash(npm view:*)",
+			"Bash(pnpm check:*)",
+			"Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5173/babylonjs)",
+			"Bash(node -e \"const p=require\\(''./package.json''\\); console.log\\(p.dependencies?.[''@babylonjs/core''] || ''NOT FOUND''\\)\")"
+		]
+	}
 }

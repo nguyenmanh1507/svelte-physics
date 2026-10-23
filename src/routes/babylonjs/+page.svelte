@@ -24,6 +24,6 @@
 
 <div class="mockup-window border-base-300 relative w-full border bg-amber-400">
 	<div class="aspect-video w-full bg-gray-50">
-		<canvas bind:this={canvas} class="w-full h-full"></canvas>
+		<canvas bind:this={canvas} class="h-full w-full"></canvas>
 	</div>
 </div>
