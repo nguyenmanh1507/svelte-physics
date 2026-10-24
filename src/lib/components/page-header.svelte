@@ -110,6 +110,10 @@
 					label: 'State Pattern - ChatGPT',
 					href: '/games/state-pattern-chatgpt',
 				},
+				{
+					label: 'Volumetric Cloud',
+					href: '/games/volumetric-cloud',
+				},
 			],
 		},
 		{

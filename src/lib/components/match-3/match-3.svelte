@@ -10,6 +10,6 @@
 	})
 </script>
 
-<div class="mx-auto h-[768px] w-[1024px]">
+<div class="mx-auto h-192 w-5xl">
 	<canvas bind:this={canvasRef} class="rounded border"></canvas>
 </div>
