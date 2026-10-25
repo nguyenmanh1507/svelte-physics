@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onMount } from 'svelte'
 	import CityRoads from './components/city-roads.svelte'
 	import CloudControls from './components/cloud-controls.svelte'
 	import { ROAD_ASSETS } from './components/road-assets'
@@ -10,18 +11,41 @@
 	let info = $state({ assets: 0, instances: 0 })
 	// ở page nên giữ nguyên khi chuyển gallery (CityRoads bị dựng lại)
 	let sky = $state(citySky())
+	let showPanel = $state(true)
+	let headerBottom = $state(64)
+
+	onMount(() => {
+		const root = document.documentElement
+		const prev = { gutter: root.style.scrollbarGutter, overflow: root.style.overflow }
+		// trang toàn màn hình: không cuộn, không chừa chỗ thanh cuộn (layout.css đặt gutter stable)
+		root.style.scrollbarGutter = 'auto'
+		root.style.overflow = 'hidden'
+
+		// navbar xuống dòng trên màn hẹp -> đo chiều cao thật thay vì cố định 4rem
+		const nav = document.querySelector('.navbar')
+		const observer = new ResizeObserver(() => {
+			if (nav) headerBottom = nav.getBoundingClientRect().bottom
+		})
+		if (nav) observer.observe(nav)
+
+		return () => {
+			observer.disconnect()
+			root.style.scrollbarGutter = prev.gutter
+			root.style.overflow = prev.overflow
+		}
+	})
 </script>
 
+<!-- canvas phủ toàn bộ màn hình dưới header, aside nổi bên phải -->
 <section
 	aria-label="Thành phố"
-	class="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_18rem] xl:gap-6"
+	class="fixed inset-x-0 bottom-0 z-0 bg-slate-950"
+	style:top="{headerBottom}px"
 >
-	<section
-		aria-label="Bản đồ đường"
-		class="min-w-0 overflow-hidden rounded-xl border border-slate-800 bg-slate-950 p-2 shadow-xl ring-1 shadow-slate-950/15 ring-white/5 sm:p-3"
-	>
+	<section aria-label="Bản đồ đường" class="h-full w-full">
 		{#key showGallery}
 			<CityRoads
+				class="h-full w-full"
 				placements={showGallery ? gallery() : ROAD_MAP}
 				labels={showGallery}
 				clouds={showClouds && !showGallery}
@@ -31,11 +55,35 @@
 		{/key}
 	</section>
 
+	{#if !showPanel}
+		<button
+			type="button"
+			aria-controls="city-panel"
+			aria-expanded="false"
+			class="absolute top-3 right-3 rounded-lg border border-slate-700 bg-slate-950/80 px-3 py-2 text-sm font-semibold text-slate-100 shadow-xl backdrop-blur hover:bg-slate-900 focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:outline-none"
+			onclick={() => (showPanel = true)}
+		>
+			Bảng điều khiển
+		</button>
+	{/if}
+
 	<aside
+		id="city-panel"
 		aria-label="Thông tin bản đồ"
-		class="overflow-hidden rounded-xl border border-slate-800 bg-slate-950 text-slate-100 shadow-xl ring-1 shadow-slate-950/15 ring-white/5"
+		hidden={!showPanel}
+		class="absolute top-0 right-0 bottom-0 w-80 max-w-[85vw] overflow-y-auto border-l border-slate-800 bg-slate-950/85 text-slate-100 shadow-2xl backdrop-blur"
 	>
-		<header class="border-b border-slate-800 px-4 py-4">
+		<header class="relative border-b border-slate-800 px-4 py-4">
+			<button
+				type="button"
+				aria-controls="city-panel"
+				aria-expanded="true"
+				aria-label="Ẩn bảng điều khiển"
+				class="absolute top-3 right-3 grid size-8 place-items-center rounded-md text-slate-400 hover:bg-slate-800 hover:text-slate-100 focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:outline-none"
+				onclick={() => (showPanel = false)}
+			>
+				✕
+			</button>
 			<p class="font-mono text-xs font-medium tracking-[0.18em] text-cyan-400 uppercase">
 				City Kit – Roads
 			</p>

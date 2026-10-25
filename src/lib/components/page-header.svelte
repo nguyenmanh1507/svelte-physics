@@ -173,7 +173,7 @@
 	</li>
 {/snippet}
 
-<div class="navbar bg-neutral text-neutral-content z-10 flex justify-center shadow-sm">
+<div class="navbar bg-neutral text-neutral-content relative z-10 flex justify-center shadow-sm">
 	<NavigationMenu.Root viewport={false}>
 		<NavigationMenu.List class="flex-wrap">
 			{#each menuItems as item (item.label)}

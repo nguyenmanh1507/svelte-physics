@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Stats from 'stats.js'
 	import * as THREE from 'three'
 	import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 	import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
@@ -18,18 +19,21 @@
 		labels = false,
 		clouds = false,
 		sky = {},
+		class: className = 'aspect-square w-full rounded-lg bg-slate-900 lg:aspect-4/3',
 		onload,
 	}: {
 		placements: Placement[]
 		labels?: boolean // hiện tên asset (chế độ gallery)
 		clouds?: boolean // hiện mây thể tích trôi trên thành phố
 		sky?: Partial<NubisParams> // cấu hình bầu trời Nubis, đổi trực tiếp không cần dựng lại scene
+		class?: string // kích thước khung canvas
 		onload?: (info: { assets: number; instances: number }) => void
 	} = $props()
 
 	let skyParams = $derived({ ...sky, clouds })
 
 	let labelLayer: HTMLDivElement | null = null
+	let statsHost: HTMLDivElement | null = null
 	let loading = $state(true)
 
 	// Gộp mọi mesh của một file GLB thành một geometry (đa số file chỉ có 1 mesh).
@@ -55,6 +59,12 @@
 	function setup({ renderer, scene, camera, cloudscape }: NubisSkyContext): NubisSceneHooks {
 		renderer.shadowMap.enabled = true
 		const labelRenderer = new CSS2DRenderer({ element: labelLayer! })
+
+		// FPS đo trong chính vòng render của scene (bấm vào để đổi sang ms / MB)
+		const stats = new Stats()
+		stats.showPanel(0)
+		stats.dom.style.cssText = 'cursor: pointer; opacity: 0.9'
+		statsHost!.append(stats.dom)
 
 		// chỉ thấy khi không có WebGPU; có mây thì composite vẽ bầu trời Nubis đè lên
 		scene.background = new THREE.Color('#a9c8e0')
@@ -156,12 +166,14 @@
 				cloudscape?.applySunLight(sun, { intensity: 2.4, hemi, hemiIntensity: 1.6 })
 				controls.update()
 				if (labels) labelRenderer.render(scene, camera)
+				stats.update()
 			},
 			resize(w, h) {
 				labelRenderer.setSize(w, h)
 			},
 			dispose() {
 				disposed = true
+				stats.dom.remove()
 				controls.dispose()
 				for (const mesh of meshes) {
 					mesh.geometry.dispose()
@@ -177,12 +189,9 @@
 	}
 </script>
 
-<NubisSky
-	params={skyParams}
-	{setup}
-	class="aspect-square w-full rounded-lg bg-slate-900 lg:aspect-4/3"
->
+<NubisSky params={skyParams} {setup} class={className}>
 	<div bind:this={labelLayer} class="pointer-events-none absolute inset-0"></div>
+	<div bind:this={statsHost} class="absolute top-2 left-2 z-10" aria-label="FPS"></div>
 	{#if loading}
 		<p
 			class="absolute inset-0 grid place-items-center font-mono text-sm tracking-wide text-slate-200"
