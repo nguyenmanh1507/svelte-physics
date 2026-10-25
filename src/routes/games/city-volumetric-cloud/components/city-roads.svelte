@@ -11,11 +11,14 @@
 		type NubisSceneHooks,
 		type NubisSkyContext,
 	} from '#lib/components/nubis-cloud/index.js'
+	import { buildingUrl, type BuildingAsset } from './building-assets'
+	import type { BuildingPlacement } from './building-map'
 	import { assetUrl, GRID, TILE, type RoadAsset } from './road-assets'
 	import type { Placement } from './road-map'
 
 	let {
 		placements,
+		buildings = [],
 		labels = false,
 		clouds = false,
 		sky = {},
@@ -23,11 +26,12 @@
 		onload,
 	}: {
 		placements: Placement[]
+		buildings?: BuildingPlacement[] // building từ City Kit - Commercial
 		labels?: boolean // hiện tên asset (chế độ gallery)
 		clouds?: boolean // hiện mây thể tích trôi trên thành phố
 		sky?: Partial<NubisParams> // cấu hình bầu trời Nubis, đổi trực tiếp không cần dựng lại scene
 		class?: string // kích thước khung canvas
-		onload?: (info: { assets: number; instances: number }) => void
+		onload?: (info: { assets: number; instances: number; buildings: number }) => void
 	} = $props()
 
 	let skyParams = $derived({ ...sky, clouds })
@@ -110,27 +114,44 @@
 		controls.minDistance = 10
 		controls.maxDistance = 800
 
-		const byAsset = Map.groupBy(placements, (p) => p.asset)
 		const meshes: THREE.InstancedMesh[] = []
-		let sharedMaterial: THREE.Material | null = null
+		// mỗi kit Kenney có colormap riêng -> dùng chung một material trong từng kit
+		const sharedMaterials: THREE.Material[] = []
 		let disposed = false
 
 		const loader = new GLTFLoader()
-		Promise.all(
-			[...byAsset.keys()].map(async (name: RoadAsset) => ({
-				name,
-				...bakeGeometry((await loader.loadAsync(assetUrl(name))).scene),
-			}))
-		).then((models) => {
-			if (disposed) return
+		type Item = { asset: string; x: number; z: number; y?: number; rot?: number }
+		async function loadKit(list: Item[], url: (asset: string) => string) {
+			const byAsset = Map.groupBy(list, (p) => p.asset)
+			const models = await Promise.all(
+				[...byAsset.keys()].map(async (name) => ({
+					name,
+					list: byAsset.get(name)!,
+					...bakeGeometry((await loader.loadAsync(url(name))).scene),
+				}))
+			)
+			const shared = models[0]?.material
+			if (shared) sharedMaterials.push(shared)
+			for (const { material } of models) if (material !== shared) material.dispose()
+			return models.map((model) => ({ ...model, material: shared! }))
+		}
+
+		Promise.all([
+			loadKit(placements, (name) => assetUrl(name as RoadAsset)),
+			loadKit(buildings, (name) => buildingUrl(name as BuildingAsset)),
+		]).then(([roadModels, buildingModels]) => {
+			if (disposed) {
+				// scene đã bị huỷ trong lúc đang tải
+				for (const { geometry } of [...roadModels, ...buildingModels]) geometry.dispose()
+				for (const material of sharedMaterials) material.dispose()
+				return
+			}
 			const m = new THREE.Matrix4()
 			const q = new THREE.Quaternion()
 			const up = new THREE.Vector3(0, 1, 0)
 			const scale = new THREE.Vector3(TILE, TILE, TILE)
-			for (const { name, geometry, material } of models) {
-				sharedMaterial ??= material
-				const list = byAsset.get(name)!
-				const mesh = new THREE.InstancedMesh(geometry, sharedMaterial, list.length)
+			for (const { name, list, geometry, material } of [...roadModels, ...buildingModels]) {
+				const mesh = new THREE.InstancedMesh(geometry, material, list.length)
 				list.forEach((p, i) => {
 					q.setFromAxisAngle(up, ((p.rot ?? 0) * Math.PI) / 2)
 					const pos = new THREE.Vector3(
@@ -155,9 +176,12 @@
 				meshes.push(mesh)
 				scene.add(mesh)
 			}
-			for (const { material } of models) if (material !== sharedMaterial) material.dispose()
 			loading = false
-			onload?.({ assets: models.length, instances: placements.length })
+			onload?.({
+				assets: roadModels.length,
+				instances: placements.length + buildings.length,
+				buildings: buildings.length,
+			})
 		})
 
 		return {
@@ -179,7 +203,7 @@
 					mesh.geometry.dispose()
 					mesh.dispose()
 				}
-				sharedMaterial?.dispose()
+				for (const material of sharedMaterials) material.dispose()
 				for (const mesh of [ground, land]) {
 					mesh.geometry.dispose()
 					mesh.material.dispose()

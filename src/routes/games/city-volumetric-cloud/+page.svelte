@@ -3,12 +3,13 @@
 	import CityRoads from './components/city-roads.svelte'
 	import CloudControls from './components/cloud-controls.svelte'
 	import { ROAD_ASSETS } from './components/road-assets'
+	import { BUILDING_MAP } from './components/building-map'
 	import { gallery, ROAD_MAP } from './components/road-map'
 	import { citySky } from './components/sky-config'
 
 	let showGallery = $state(false)
 	let showClouds = $state(true)
-	let info = $state({ assets: 0, instances: 0 })
+	let info = $state({ assets: 0, instances: 0, buildings: 0 })
 	// ở page nên giữ nguyên khi chuyển gallery (CityRoads bị dựng lại)
 	let sky = $state(citySky())
 	let showPanel = $state(true)
@@ -47,6 +48,7 @@
 			<CityRoads
 				class="h-full w-full"
 				placements={showGallery ? gallery() : ROAD_MAP}
+				buildings={showGallery ? [] : BUILDING_MAP}
 				labels={showGallery}
 				clouds={showClouds && !showGallery}
 				{sky}
@@ -93,14 +95,20 @@
 			</p>
 		</header>
 
-		<dl class="grid grid-cols-2 gap-3 border-b border-slate-800 p-4 text-sm">
-			<div class="rounded-lg border border-slate-800 bg-slate-900/70 px-3 py-2">
+		<dl class="grid grid-cols-3 gap-2 border-b border-slate-800 p-4 text-sm">
+			<div class="rounded-lg border border-slate-800 bg-slate-900/70 px-2.5 py-2">
 				<dt class="text-slate-400">Loại asset</dt>
 				<dd class="font-mono text-base font-semibold text-cyan-300 tabular-nums">
 					{info.assets}/{ROAD_ASSETS.length}
 				</dd>
 			</div>
-			<div class="rounded-lg border border-slate-800 bg-slate-900/70 px-3 py-2">
+			<div class="rounded-lg border border-slate-800 bg-slate-900/70 px-2.5 py-2">
+				<dt class="text-slate-400">Building</dt>
+				<dd class="font-mono text-base font-semibold text-cyan-300 tabular-nums">
+					{info.buildings}
+				</dd>
+			</div>
+			<div class="rounded-lg border border-slate-800 bg-slate-900/70 px-2.5 py-2">
 				<dt class="text-slate-400">Instance</dt>
 				<dd class="font-mono text-base font-semibold text-cyan-300 tabular-nums">
 					{info.instances}
