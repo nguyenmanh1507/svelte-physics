@@ -2,7 +2,8 @@
 
 https://github.com/user-attachments/assets/21e1f1eb-d91e-4836-aeb2-88426a0cccdf
 
-_Demo: a Nubis-style volumetric cloudscape over a low-poly city, rendered in real time with Three.js._
+_Demo: real-time volumetric clouds over a low-poly city, in Three.js (WebGPU), inspired by the Nubis cloudscape techniques from Guerrilla Games._
+
 
 ## Purpose
 
@@ -12,16 +13,16 @@ Everything runs in the browser on [SvelteKit](https://svelte.dev/docs/kit) (Svel
 
 ## What's inside
 
-| Area               | Route                                                     | What it explores                                                                                        |
-| ------------------ | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| Volumetric clouds  | `/games/volumetric-cloud`, `/games/city-volumetric-cloud` | Ray-marched volumetric clouds, a port of Nubis cloudscape into Three.js, cloud shadows, post-processing |
-| Jolt Physics       | `/jolt-physics`                                           | Jolt rigid-body physics with Threlte, arcade car and plane controllers                                  |
-| Threlte            | `/threlte`                                                | Three.js in Svelte: introduction, gemstone, post-processing                                             |
-| Ten Minute Physics | `/ten-min-physics`                                        | 2D/3D physics, billiards and pinball following the Ten Minute Physics series                            |
-| JS physics         | `/js-physics`                                             | Bouncing ball with p5.js                                                                                |
-| Babylon.js         | `/babylonjs`                                              | Basic Babylon.js scene setup                                                                            |
-| Games              | `/games`                                                  | Small game prototypes (LittleJS breakout, match-3, state pattern)                                       |
-| Watercolor         | `/watercolor`                                             | Watercolor brush clone                                                                                  |
+| Area               | Route                                                     | What it explores                                                                                                                                      |
+| ------------------ | --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Volumetric clouds  | `/games/volumetric-cloud`, `/games/city-volumetric-cloud` | Ray-marched volumetric clouds, a re-implementation of published Nubis cloudscape techniques in Three.js, cloud shadows, light shafts, post-processing |
+| Jolt Physics       | `/jolt-physics`                                           | Jolt rigid-body physics with Threlte, arcade car and plane controllers                                                                                |
+| Threlte            | `/threlte`                                                | Three.js in Svelte: introduction, gemstone, post-processing                                                                                           |
+| Ten Minute Physics | `/ten-min-physics`                                        | 2D/3D physics, billiards and pinball following the Ten Minute Physics series                                                                          |
+| JS physics         | `/js-physics`                                             | Bouncing ball with p5.js                                                                                                                              |
+| Babylon.js         | `/babylonjs`                                              | Basic Babylon.js scene setup                                                                                                                          |
+| Games              | `/games`                                                  | Small game prototypes (LittleJS breakout, match-3, state pattern)                                                                                     |
+| Watercolor         | `/watercolor`                                             | Watercolor brush clone                                                                                                                                |
 
 ## Tech stack
 
@@ -56,3 +57,12 @@ Then open the URL printed by Vite.
 | `pnpm test:e2e`  | Run Playwright end-to-end tests    |
 | `pnpm test`      | Run unit tests, then e2e tests     |
 | `pnpm storybook` | Run Storybook at `localhost:6006`  |
+
+## Credits and references
+
+The volumetric clouds are an independent re-implementation. It is **not** a port of Guerrilla Games' code and is not affiliated with or endorsed by them: Nubis is proprietary, so the shaders were written from the publicly described techniques. Some parts are original to this project (cloud shadows, light shafts, stylized post-processing, per-column cloud heights), and the tuning constants are chosen by eye rather than taken from the original.
+
+- Schneider, _Nubis – Realtime Volumetric Cloudscapes In A Nutshell_ (Eurographics 2018)
+- Schneider & Vos, _The Real-time Volumetric Cloudscapes of Horizon Zero Dawn_ (SIGGRAPH 2015)
+- Schneider, _Nubis: Authoring Real-Time Volumetric Cloudscapes…_ (SIGGRAPH 2017), GPU Pro 7 ch. 4
+- Models: [Kenney](https://www.kenney.nl) City Kit – Roads and City Kit – Commercial (CC0)
