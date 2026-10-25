@@ -1,11 +1,15 @@
 <script lang="ts">
-	import { onMount } from 'svelte'
 	import * as THREE from 'three'
 	import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 	import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
 	import { CSS2DObject, CSS2DRenderer } from 'three/addons/renderers/CSS2DRenderer.js'
 	import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js'
-	import { CloudField } from '#lib/components/volumetric-cloud/index.js'
+	import {
+		NubisSky,
+		type NubisParams,
+		type NubisSceneHooks,
+		type NubisSkyContext,
+	} from '#lib/components/nubis-cloud/index.js'
 	import { assetUrl, GRID, TILE, type RoadAsset } from './road-assets'
 	import type { Placement } from './road-map'
 
@@ -13,24 +17,20 @@
 		placements,
 		labels = false,
 		clouds = false,
+		sky = {},
 		onload,
 	}: {
 		placements: Placement[]
 		labels?: boolean // hiện tên asset (chế độ gallery)
 		clouds?: boolean // hiện mây thể tích trôi trên thành phố
+		sky?: Partial<NubisParams> // cấu hình bầu trời Nubis, đổi trực tiếp không cần dựng lại scene
 		onload?: (info: { assets: number; instances: number }) => void
 	} = $props()
 
-	let container: HTMLDivElement | null = null
-	let canvas: HTMLCanvasElement | null = null
+	let skyParams = $derived({ ...sky, clouds })
+
 	let labelLayer: HTMLDivElement | null = null
 	let loading = $state(true)
-	let cloudField = $state.raw<CloudField | null>(null)
-
-	// bật/tắt mây không cần dựng lại scene
-	$effect(() => {
-		if (cloudField) cloudField.group.visible = clouds
-	})
 
 	// Gộp mọi mesh của một file GLB thành một geometry (đa số file chỉ có 1 mesh).
 	function bakeGeometry(root: THREE.Object3D) {
@@ -52,23 +52,21 @@
 		return { geometry, material: material! }
 	}
 
-	onMount(() => {
-		if (!container || !canvas || !labelLayer) return
-
-		const renderer = new THREE.WebGLRenderer({ canvas, antialias: true })
-		renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+	function setup({ renderer, scene, camera, cloudscape }: NubisSkyContext): NubisSceneHooks {
 		renderer.shadowMap.enabled = true
+		const labelRenderer = new CSS2DRenderer({ element: labelLayer! })
 
-		const labelRenderer = new CSS2DRenderer({ element: labelLayer })
-
-		const scene = new THREE.Scene()
+		// chỉ thấy khi không có WebGPU; có mây thì composite vẽ bầu trời Nubis đè lên
 		scene.background = new THREE.Color('#a9c8e0')
-		scene.fog = new THREE.Fog('#a9c8e0', 400, 900)
 
-		const camera = new THREE.PerspectiveCamera(45, 1, 1, 2000)
+		camera.fov = 45
+		camera.near = 1
+		camera.far = 6000
 		camera.position.set(190, 170, 210)
+		camera.updateProjectionMatrix()
 
-		scene.add(new THREE.HemisphereLight('#dfefff', '#4b4f5c', 1.6))
+		const hemi = new THREE.HemisphereLight('#dfefff', '#4b4f5c', 1.6)
+		scene.add(hemi)
 		const sun = new THREE.DirectionalLight('#fff4e0', 2.4)
 		sun.position.set(120, 200, 80)
 		sun.castShadow = true
@@ -80,26 +78,21 @@
 		sun.shadow.camera.far = 600
 		scene.add(sun)
 
-		// Mặt đất 300 x 300 dưới toàn bộ lưới
-		const ground = new THREE.Mesh(
-			new THREE.PlaneGeometry(GRID * TILE, GRID * TILE),
-			new THREE.MeshStandardMaterial({ color: '#474b57', roughness: 1 })
-		)
+		// Mặt đất 300 x 300 dưới toàn bộ lưới, nối với một vùng đất rộng mờ dần vào sương ở chân trời
+		const groundMaterial = new THREE.MeshStandardMaterial({ color: '#474b57', roughness: 1 })
+		const ground = new THREE.Mesh(new THREE.PlaneGeometry(GRID * TILE, GRID * TILE), groundMaterial)
 		ground.rotation.x = -Math.PI / 2
 		ground.position.y = -0.05
 		ground.receiveShadow = true
 		scene.add(ground)
-
-		// Mây trôi chậm theo gió Tây Bắc -> Đông Nam, ánh sáng cùng hướng mặt trời của scene.
-		const field = new CloudField({
-			sunDirection: sun.position,
-			fog: scene.fog,
-			skyColor: '#a9c8e0',
-			groundColor: '#5d6170',
-			wind: new THREE.Vector3(2.2, 0, 1),
-		})
-		scene.add(field.group)
-		cloudField = field
+		const land = new THREE.Mesh(
+			new THREE.PlaneGeometry(8000, 8000, 16, 16),
+			new THREE.MeshStandardMaterial({ color: '#5a6352', roughness: 1 })
+		)
+		land.rotation.x = -Math.PI / 2
+		land.position.y = -0.1
+		land.receiveShadow = true
+		scene.add(land)
 
 		const controls = new OrbitControls(camera, renderer.domElement)
 		controls.enableDamping = true
@@ -157,50 +150,38 @@
 			onload?.({ assets: models.length, instances: placements.length })
 		})
 
-		const resize = () => {
-			const { clientWidth: w, clientHeight: h } = container!
-			renderer.setSize(w, h)
-			labelRenderer.setSize(w, h)
-			camera.aspect = w / h
-			camera.updateProjectionMatrix()
+		return {
+			update() {
+				// đèn của scene đi theo mặt trời của bầu trời Nubis
+				cloudscape?.applySunLight(sun, { intensity: 2.4, hemi, hemiIntensity: 1.6 })
+				controls.update()
+				if (labels) labelRenderer.render(scene, camera)
+			},
+			resize(w, h) {
+				labelRenderer.setSize(w, h)
+			},
+			dispose() {
+				disposed = true
+				controls.dispose()
+				for (const mesh of meshes) {
+					mesh.geometry.dispose()
+					mesh.dispose()
+				}
+				sharedMaterial?.dispose()
+				for (const mesh of [ground, land]) {
+					mesh.geometry.dispose()
+					mesh.material.dispose()
+				}
+			},
 		}
-		const observer = new ResizeObserver(resize)
-		observer.observe(container)
-		resize()
-
-		const timer = new THREE.Timer()
-		renderer.setAnimationLoop(() => {
-			timer.update()
-			if (field.group.visible) field.update(timer.getDelta())
-			controls.update()
-			renderer.render(scene, camera)
-			if (labels) labelRenderer.render(scene, camera)
-		})
-
-		return () => {
-			disposed = true
-			renderer.setAnimationLoop(null)
-			observer.disconnect()
-			controls.dispose()
-			for (const mesh of meshes) {
-				mesh.geometry.dispose()
-				mesh.dispose()
-			}
-			sharedMaterial?.dispose()
-			ground.geometry.dispose()
-			ground.material.dispose()
-			field.dispose()
-			cloudField = null
-			renderer.dispose()
-		}
-	})
+	}
 </script>
 
-<div
-	bind:this={container}
-	class="relative aspect-square w-full overflow-hidden rounded-lg bg-slate-900 lg:aspect-4/3"
+<NubisSky
+	params={skyParams}
+	{setup}
+	class="aspect-square w-full rounded-lg bg-slate-900 lg:aspect-4/3"
 >
-	<canvas bind:this={canvas} class="block h-full w-full"></canvas>
 	<div bind:this={labelLayer} class="pointer-events-none absolute inset-0"></div>
 	{#if loading}
 		<p
@@ -209,4 +190,4 @@
 			Đang tải model…
 		</p>
 	{/if}
-</div>
+</NubisSky>

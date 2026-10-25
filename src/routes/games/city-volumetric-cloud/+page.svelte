@@ -1,11 +1,15 @@
 <script lang="ts">
 	import CityRoads from './components/city-roads.svelte'
+	import CloudControls from './components/cloud-controls.svelte'
 	import { ROAD_ASSETS } from './components/road-assets'
 	import { gallery, ROAD_MAP } from './components/road-map'
+	import { citySky } from './components/sky-config'
 
 	let showGallery = $state(false)
 	let showClouds = $state(true)
 	let info = $state({ assets: 0, instances: 0 })
+	// ở page nên giữ nguyên khi chuyển gallery (CityRoads bị dựng lại)
+	let sky = $state(citySky())
 </script>
 
 <section
@@ -21,6 +25,7 @@
 				placements={showGallery ? gallery() : ROAD_MAP}
 				labels={showGallery}
 				clouds={showClouds && !showGallery}
+				{sky}
 				onload={(i) => (info = i)}
 			/>
 		{/key}
@@ -55,7 +60,7 @@
 			</div>
 		</dl>
 
-		<footer class="grid gap-2 p-4">
+		<div class="grid gap-2 border-b border-slate-800 p-4">
 			<button
 				type="button"
 				aria-pressed={showClouds}
@@ -75,6 +80,19 @@
 			>
 				{showGallery ? 'Xem bản đồ' : 'Xem toàn bộ asset'}
 			</button>
-		</footer>
+		</div>
+
+		<section aria-labelledby="cloud-config-title">
+			<header class="px-4 pt-4">
+				<p class="font-mono text-xs font-medium tracking-[0.18em] text-cyan-400 uppercase">Nubis</p>
+				<h2 id="cloud-config-title" class="mt-1 text-base font-semibold tracking-tight">
+					Cấu hình mây
+				</h2>
+				<p class="mt-1 text-sm leading-5 text-slate-400">
+					Độ dài tính bằng mét, nhân với tỉ lệ để ra unit của scene.
+				</p>
+			</header>
+			<CloudControls bind:params={sky} disabled={!showClouds || showGallery} />
+		</section>
 	</aside>
 </section>
