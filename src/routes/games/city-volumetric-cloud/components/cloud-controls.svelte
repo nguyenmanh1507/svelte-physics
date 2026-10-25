@@ -55,7 +55,12 @@
 					</label>
 				{/each}
 
-				{#if group === 'Hình dạng'}
+				{#if group === 'Hậu kỳ'}
+					<label class="flex items-center gap-2 text-xs font-medium text-slate-300">
+						<input type="checkbox" class="accent-cyan-400 {focus}" bind:checked={params.post} />
+						Bật hậu kỳ stylized
+					</label>
+				{:else if group === 'Hình dạng'}
 					<label class="flex items-center gap-2 text-xs font-medium text-slate-300">
 						<input type="checkbox" class="accent-cyan-400 {focus}" bind:checked={params.animate} />
 						Mây trôi theo gió

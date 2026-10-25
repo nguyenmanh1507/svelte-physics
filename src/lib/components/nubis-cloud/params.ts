@@ -54,6 +54,15 @@ export interface NubisParams {
 	exposure: number
 	animate: boolean
 	clouds: boolean // false = chỉ vẽ trời + scene
+	// hậu kỳ stylized (kiểu Breath of the Wild), áp trong HDR trước tone mapping
+	post: boolean
+	outline: number // 0–1, độ đậm viền mực theo depth
+	bloomStrength: number
+	bloomThreshold: number // độ sáng HDR bắt đầu glow
+	saturation: number // 1 = giữ nguyên
+	contrast: number // 1 = giữ nguyên
+	warmth: number // 0–1, nhuộm vùng sáng ấm / vùng tối lạnh
+	vignette: number // 0–1
 	scale: number // world unit / mét
 }
 
@@ -102,6 +111,14 @@ export const defaultNubisParams: NubisParams = {
 	exposure: 1.0,
 	animate: true,
 	clouds: true,
+	post: true,
+	outline: 0.7,
+	bloomStrength: 0.3,
+	bloomThreshold: 0.9,
+	saturation: 1.2,
+	contrast: 1.06,
+	warmth: 0.5,
+	vignette: 0.3,
 	scale: 1,
 }
 

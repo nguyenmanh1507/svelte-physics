@@ -22,6 +22,7 @@
 		labels = false,
 		clouds = false,
 		sky = {},
+		toon = true,
 		class: className = 'aspect-square w-full rounded-lg bg-slate-900 lg:aspect-4/3',
 		onload,
 	}: {
@@ -30,11 +31,19 @@
 		labels?: boolean // hiện tên asset (chế độ gallery)
 		clouds?: boolean // hiện mây thể tích trôi trên thành phố
 		sky?: Partial<NubisParams> // cấu hình bầu trời Nubis, đổi trực tiếp không cần dựng lại scene
+		toon?: boolean // cel shading: bóng chia bậc kiểu Breath of the Wild
 		class?: string // kích thước khung canvas
 		onload?: (info: { assets: number; instances: number; buildings: number }) => void
 	} = $props()
 
 	let skyParams = $derived({ ...sky, clouds })
+
+	// gán trong setup; đổi prop toon -> đổi material của mọi mesh, không dựng lại scene
+	let applyToon: ((on: boolean) => void) | null = null
+	$effect(() => {
+		const on = toon
+		applyToon?.(on)
+	})
 
 	let labelLayer: HTMLDivElement | null = null
 	let statsHost: HTMLDivElement | null = null
@@ -92,6 +101,31 @@
 		sun.shadow.camera.far = 600
 		scene.add(sun)
 
+		// Cel shading: mỗi material standard có một bản toon dùng chung dải sáng 4 bậc
+		const ramp = new THREE.DataTexture(new Uint8Array([70, 140, 205, 255]), 4, 1, THREE.RedFormat)
+		ramp.minFilter = ramp.magFilter = THREE.NearestFilter
+		ramp.needsUpdate = true
+		const toonOf = new WeakMap<THREE.Material, THREE.Material>()
+		const toonMaterials: THREE.Material[] = []
+		const swappable: { mesh: THREE.Mesh; standard: THREE.Material }[] = []
+		const register = (mesh: THREE.Mesh) => {
+			const standard = mesh.material as THREE.MeshStandardMaterial
+			if (!toonOf.has(standard)) {
+				const material = new THREE.MeshToonMaterial({
+					color: standard.color,
+					map: standard.map,
+					gradientMap: ramp,
+				})
+				toonOf.set(standard, material)
+				toonMaterials.push(material)
+			}
+			swappable.push({ mesh, standard })
+		}
+		applyToon = (on) => {
+			for (const { mesh, standard } of swappable)
+				mesh.material = on ? toonOf.get(standard)! : standard
+		}
+
 		// Mặt đất 300 x 300 dưới toàn bộ lưới, nối với một vùng đất rộng mờ dần vào sương ở chân trời
 		const groundMaterial = new THREE.MeshStandardMaterial({ color: '#474b57', roughness: 1 })
 		const ground = new THREE.Mesh(new THREE.PlaneGeometry(GRID * TILE, GRID * TILE), groundMaterial)
@@ -101,7 +135,7 @@
 		scene.add(ground)
 		const land = new THREE.Mesh(
 			new THREE.PlaneGeometry(8000, 8000, 16, 16),
-			new THREE.MeshStandardMaterial({ color: '#5a6352', roughness: 1 })
+			new THREE.MeshStandardMaterial({ color: '#6a8a4c', roughness: 1 })
 		)
 		land.rotation.x = -Math.PI / 2
 		land.position.y = -0.1
@@ -113,6 +147,10 @@
 		controls.maxPolarAngle = Math.PI * 0.47
 		controls.minDistance = 10
 		controls.maxDistance = 800
+
+		register(ground)
+		register(land)
+		applyToon(toon)
 
 		const meshes: THREE.InstancedMesh[] = []
 		// mỗi kit Kenney có colormap riêng -> dùng chung một material trong từng kit
@@ -176,6 +214,8 @@
 				meshes.push(mesh)
 				scene.add(mesh)
 			}
+			for (const mesh of meshes) register(mesh)
+			applyToon?.(toon)
 			loading = false
 			onload?.({
 				assets: roadModels.length,
@@ -203,10 +243,14 @@
 					mesh.geometry.dispose()
 					mesh.dispose()
 				}
+				applyToon = null
 				for (const material of sharedMaterials) material.dispose()
-				for (const mesh of [ground, land]) {
+				for (const material of toonMaterials) material.dispose()
+				ramp.dispose()
+				// material standard gốc (mesh.material có thể đang là bản toon đã giải phóng ở trên)
+				for (const { mesh, standard } of swappable.slice(0, 2)) {
 					mesh.geometry.dispose()
-					mesh.material.dispose()
+					standard.dispose()
 				}
 			},
 		}

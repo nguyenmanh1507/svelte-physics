@@ -13,6 +13,7 @@
 	// ở page nên giữ nguyên khi chuyển gallery (CityRoads bị dựng lại)
 	let sky = $state(citySky())
 	let showPanel = $state(true)
+	let toon = $state(true)
 	let headerBottom = $state(64)
 
 	onMount(() => {
@@ -49,6 +50,7 @@
 				class="h-full w-full"
 				placements={showGallery ? gallery() : ROAD_MAP}
 				buildings={showGallery ? [] : BUILDING_MAP}
+				{toon}
 				labels={showGallery}
 				clouds={showClouds && !showGallery}
 				{sky}
@@ -127,6 +129,16 @@
 				onclick={() => (showClouds = !showClouds)}
 			>
 				Mây thể tích: {showClouds ? 'bật' : 'tắt'}
+			</button>
+			<button
+				type="button"
+				aria-pressed={toon}
+				class="w-full rounded-lg border px-4 py-2.5 text-sm font-semibold transition-colors focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 focus-visible:outline-none {toon
+					? 'border-cyan-400/50 bg-cyan-400/10 text-cyan-50'
+					: 'border-slate-700 bg-slate-900 text-slate-300 hover:border-slate-600 hover:bg-slate-800'}"
+				onclick={() => (toon = !toon)}
+			>
+				Cel shading: {toon ? 'bật' : 'tắt'}
 			</button>
 			<button
 				type="button"

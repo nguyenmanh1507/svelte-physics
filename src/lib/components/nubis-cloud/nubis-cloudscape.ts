@@ -1,5 +1,6 @@
 import * as THREE from 'three/webgpu'
-import { texture, texture3D, uniform, uv, wgsl, wgslFn } from 'three/tsl'
+import { texture, texture3D, uniform, uv, vec2, wgsl, wgslFn } from 'three/tsl'
+import { bloom } from 'three/addons/tsl/display/BloomNode.js'
 import { NubisTextures } from './noise-textures'
 import {
 	WEATHER_KEYS,
@@ -12,6 +13,7 @@ import {
 import { cloudHelpersWGSL, cloudMarchFn } from './wgsl/cloud-march'
 import { COMMON_INCLUDES, phaseWGSL } from './wgsl/common'
 import { skyWGSL } from './wgsl/sky'
+import { stylizeFn } from './wgsl/stylize'
 
 // Cloud shadows on the scene: from a scene point, 3 cheap density samples along the sun ray
 // through the cloud layer -> Beer-Lambert transmittance. Same density function as the march,
@@ -102,7 +104,8 @@ export type SunLightOptions = {
 //   await clouds.init()
 //   mỗi frame: clouds.render(scene, camera, delta)   // thay cho renderer.render(scene, camera)
 //
-// Ba pass: scene → render target HDR + depth, mây → target độ phân giải thấp, composite → màn hình.
+// Các pass: scene → render target HDR + depth, mây → target độ phân giải thấp, composite → HDR,
+// hậu kỳ stylized (viền, bloom, chỉnh màu) → màn hình. Tắt `post` thì composite vẽ thẳng ra màn hình.
 // Camera phải là PerspectiveCamera với depth thường (không reversed / logarithmic) vì shader
 // dựng lại khoảng cách từ near / far.
 export class NubisCloudscape {
@@ -119,8 +122,12 @@ export class NubisCloudscape {
 	#depthTexture: THREE.DepthTexture
 	#cloudMaterial = new THREE.NodeMaterial()
 	#compositeMaterial = new THREE.NodeMaterial()
+	#postMaterial = new THREE.NodeMaterial()
 	#cloudQuad: THREE.QuadMesh
 	#compositeQuad: THREE.QuadMesh
+	#postQuad: THREE.QuadMesh
+	#hdrRT: THREE.RenderTarget // kết quả composite, đầu vào của hậu kỳ
+	#bloom: ReturnType<typeof bloom>
 
 	// uniform dùng chung cho pass mây và composite
 	#u = {
@@ -144,6 +151,12 @@ export class NubisCloudscape {
 		cloudSize: uniform(new THREE.Vector2(1, 1)),
 		cloudsOn: uniform(1),
 		cloudShadow: uniform(0),
+		texel: uniform(new THREE.Vector2(1, 1)), // 1 / kích thước drawing buffer
+		outline: uniform(0),
+		saturation: uniform(1),
+		contrast: uniform(1),
+		warmth: uniform(0),
+		vignette: uniform(0),
 	}
 	// packUniforms ghi thẳng vào value của các uniform trên
 	#packed: PackedUniforms = {
@@ -173,6 +186,13 @@ export class NubisCloudscape {
 			minFilter: THREE.LinearFilter,
 			magFilter: THREE.LinearFilter,
 		})
+		this.#hdrRT = new THREE.RenderTarget(w, h, {
+			type: THREE.HalfFloatType,
+			depthBuffer: false,
+			minFilter: THREE.LinearFilter,
+			magFilter: THREE.LinearFilter,
+		})
+		this.#u.texel.value.set(1 / w, 1 / h)
 		const scale = this.params.renderScale
 		this.#cloudRT = new THREE.RenderTarget(Math.ceil(w * scale), Math.ceil(h * scale), {
 			type: THREE.HalfFloatType,
@@ -258,6 +278,32 @@ export class NubisCloudscape {
 			uLight2: u.uLight2,
 		})
 		this.#compositeQuad = new THREE.QuadMesh(comp)
+
+		// hậu kỳ: bloom cộng vào ảnh HDR rồi mới viền + chỉnh màu
+		const hdr = texture(this.#hdrRT.texture, uv())
+		this.#bloom = bloom(hdr, 0, 0.4, 1)
+		const depthAt = (dx: number, dy: number) =>
+			texture(this.#depthTexture, uv().add(vec2(u.texel.x.mul(dx), u.texel.y.mul(dy)))).r
+		const post = this.#postMaterial
+		post.depthTest = post.depthWrite = false
+		post.fragmentNode = stylizeFn({
+			uv: uv(),
+			color: hdr.add(this.#bloom),
+			dC: depth.r,
+			dL: depthAt(-1, 0),
+			dR: depthAt(1, 0),
+			dU: depthAt(0, -1),
+			dD: depthAt(0, 1),
+			camNear: u.camNear,
+			camFar: u.camFar,
+			fogDensity: u.fogDensity,
+			outline: u.outline,
+			saturation: u.saturation,
+			contrast: u.contrast,
+			warmth: u.warmth,
+			vignette: u.vignette,
+		})
+		this.#postQuad = new THREE.QuadMesh(post)
 		this.#syncUniforms()
 	}
 
@@ -283,6 +329,8 @@ export class NubisCloudscape {
 	setSize() {
 		const { x: w, y: h } = this.#renderer.getDrawingBufferSize(this.#size)
 		this.#sceneRT.setSize(w, h)
+		this.#hdrRT.setSize(w, h)
+		this.#u.texel.value.set(1 / w, 1 / h)
 		const scale = this.params.renderScale
 		this.#cloudRT.setSize(Math.ceil(w * scale), Math.ceil(h * scale))
 	}
@@ -319,9 +367,16 @@ export class NubisCloudscape {
 			this.#cloudQuad.render(renderer)
 		}
 
-		// 3. composite → màn hình (renderer áp tone mapping + sRGB)
-		renderer.setRenderTarget(target)
+		// 3. composite: bầu trời + bóng mây + sương + mây. Debug view luôn vẽ thẳng, không hậu kỳ.
+		const post = p.post && p.debugMode === 0
+		renderer.setRenderTarget(post ? this.#hdrRT : target)
 		this.#compositeQuad.render(renderer)
+
+		// 4. hậu kỳ stylized → màn hình (renderer áp tone mapping + sRGB)
+		if (post) {
+			renderer.setRenderTarget(target)
+			this.#postQuad.render(renderer)
+		}
 	}
 
 	// Cho đèn của scene đi theo mặt trời Nubis: hướng, màu (đỏ dần lúc hoàng hôn), cường độ.
@@ -344,6 +399,9 @@ export class NubisCloudscape {
 	dispose() {
 		this.#sceneRT.dispose()
 		this.#cloudRT.dispose()
+		this.#hdrRT.dispose()
+		this.#bloom.dispose()
+		this.#postMaterial.dispose()
 		this.#depthTexture.dispose()
 		this.#cloudMaterial.dispose()
 		this.#compositeMaterial.dispose()
@@ -368,5 +426,12 @@ export class NubisCloudscape {
 		packUniforms(p, this.#time, this.#packed)
 		u.fogDensity.value = this.#packed.fogDensity
 		u.cloudShadow.value = p.cloudShadow
+		u.outline.value = p.outline
+		u.saturation.value = p.saturation
+		u.contrast.value = p.contrast
+		u.warmth.value = p.warmth
+		u.vignette.value = p.vignette
+		this.#bloom.strength.value = p.bloomStrength
+		this.#bloom.threshold.value = p.bloomThreshold
 	}
 }

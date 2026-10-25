@@ -108,6 +108,18 @@ export const CLOUD_CONTROLS: { group: string; controls: CloudControl[] }[] = [
 			{ key: 'fogDensity', label: 'Sương (1/m)', min: 0, max: 0.00005, step: 0.000001 },
 		],
 	},
+	{
+		group: 'Hậu kỳ',
+		controls: [
+			{ key: 'outline', label: 'Viền mực', min: 0, max: 1, step: 0.01 },
+			{ key: 'bloomStrength', label: 'Bloom', min: 0, max: 1.5, step: 0.01 },
+			{ key: 'bloomThreshold', label: 'Ngưỡng bloom', min: 0, max: 3, step: 0.05 },
+			{ key: 'saturation', label: 'Độ bão hoà', min: 0, max: 2, step: 0.01 },
+			{ key: 'contrast', label: 'Tương phản', min: 0.7, max: 1.5, step: 0.01 },
+			{ key: 'warmth', label: 'Ấm sáng / lạnh tối', min: 0, max: 1, step: 0.01 },
+			{ key: 'vignette', label: 'Vignette', min: 0, max: 1, step: 0.01 },
+		],
+	},
 ]
 
 export const RENDER_SCALES = [0.25, 0.5, 0.75, 1]
