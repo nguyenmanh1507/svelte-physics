@@ -43,6 +43,7 @@ export interface NubisParams {
 	lightStepLen: number
 	inScatterStrength: number
 	msOctaves: number
+	cloudShadow: number // 0–1, độ đậm bóng mây chiếu xuống scene
 	densityScale: number
 	// renderer
 	maxSteps: number
@@ -91,6 +92,7 @@ export const defaultNubisParams: NubisParams = {
 	lightStepLen: 120,
 	inScatterStrength: 1.0,
 	msOctaves: 4,
+	cloudShadow: 0.6,
 	densityScale: 2.0,
 	maxSteps: 128,
 	jitter: 1.0,

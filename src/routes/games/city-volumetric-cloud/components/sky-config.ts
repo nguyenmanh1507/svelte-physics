@@ -95,6 +95,7 @@ export const CLOUD_CONTROLS: { group: string; controls: CloudControl[] }[] = [
 			{ key: 'inScatterStrength', label: 'In-scatter', min: 0, max: 1, step: 0.01 },
 			{ key: 'lightStepLen', label: 'Bước tia sáng (m)', min: 20, max: 600, step: 5 },
 			{ key: 'msOctaves', label: 'Octave tán xạ bội', min: 1, max: 4, step: 1 },
+			{ key: 'cloudShadow', label: 'Bóng mây', min: 0, max: 1, step: 0.01 },
 		],
 	},
 	{

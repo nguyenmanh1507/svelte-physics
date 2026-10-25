@@ -1,5 +1,5 @@
 import * as THREE from 'three/webgpu'
-import { texture, texture3D, uniform, uv, wgslFn } from 'three/tsl'
+import { texture, texture3D, uniform, uv, wgsl, wgslFn } from 'three/tsl'
 import { NubisTextures } from './noise-textures'
 import {
 	WEATHER_KEYS,
@@ -9,16 +9,61 @@ import {
 	type NubisParams,
 	type PackedUniforms,
 } from './params'
-import { cloudMarchFn } from './wgsl/cloud-march'
-import { phaseWGSL, remapWGSL } from './wgsl/common'
+import { cloudHelpersWGSL, cloudMarchFn } from './wgsl/cloud-march'
+import { COMMON_INCLUDES, phaseWGSL } from './wgsl/common'
 import { skyWGSL } from './wgsl/sky'
 
-// Composite: sky background + aerial perspective + clouds (premultiplied over).
+// Cloud shadows on the scene: from a scene point, 3 cheap density samples along the sun ray
+// through the cloud layer -> Beer-Lambert transmittance. Same density function as the march,
+// so shadows sit under the clouds and drift with the wind. Soft by design (no detail erosion).
+const cloudShadowWGSL = wgsl(/* wgsl */ `
+fn cloudShadowFactor(
+	p : vec3<f32>, sunDir : vec3<f32>, windDir : vec3<f32>, strength : f32,
+	shapeTex : texture_3d<f32>, shapeSampler : sampler,
+	detailTex : texture_3d<f32>, detailSampler : sampler,
+	curlTex : texture_2d<f32>, curlSampler : sampler,
+	weatherTex : texture_2d<f32>, weatherSampler : sampler,
+	uLayer : vec4<f32>, uScale : vec4<f32>, uShape : vec4<f32>, uProfile : vec4<f32>,
+	uAnim : vec4<f32>, uLight : vec4<f32>, uLight2 : vec4<f32>
+) -> f32 {
+	// low sun: shadows would stretch to infinity -> fade them out at sunrise / sunset
+	let sunFade = smoothstep( 0.02, 0.15, sunDir.y );
+	if ( strength <= 0.0 || sunFade <= 0.0 ) { return 1.0; }
+	let planetR = uLayer.z;
+	let planetCenter = vec3<f32>( 0.0, -planetR, 0.0 );
+	let inner = raySphere( p, sunDir, planetCenter, planetR + uLayer.x );
+	let outer = raySphere( p, sunDir, planetCenter, planetR + uLayer.y );
+	let t0 = max( inner.y, 0.0 );
+	let t1 = outer.y;
+	if ( t1 <= t0 ) { return 1.0; }
+	let segLen = ( t1 - t0 ) / 3.0;
+	var depth = 0.0;
+	for ( var i : i32 = 0; i < 3; i++ ) {
+		let sp = p + sunDir * ( t0 + segLen * ( f32( i ) + 0.5 ) );
+		let hf = heightFraction( sp, planetCenter, planetR, uLayer.x, uLayer.y );
+		let w = sampleWeather( weatherTex, weatherSampler, sp, uScale.x );
+		depth += sampleCloudDensity( sp, w, hf, true, windDir, shapeTex, shapeSampler,
+			detailTex, detailSampler, curlTex, curlSampler, uScale, uShape, uProfile, uAnim, uLight2 );
+	}
+	// cheap density has no erosion and overestimates -> halve the optical depth
+	let transmittance = exp( -depth * uLight.x * segLen * 0.5 );
+	return mix( 1.0, transmittance, strength * sunFade );
+}
+`)
+
+// Composite: sky background + cloud shadows + aerial perspective + clouds (premultiplied over).
 const compositeFn = wgslFn(
 	/* wgsl */ `
 fn composite( uv : vec2<f32>, sceneColor : vec4<f32>, sceneDepth : f32, cloudIn : vec4<f32>, cloudsOn : f32,
-	camTan : vec2<f32>, camWorld : mat4x4<f32>, camNear : f32, camFar : f32,
-	sunDir : vec3<f32>, sunIntensity : f32, fogDensity : f32, debugMode : f32 ) -> vec4<f32> {
+	camPos : vec3<f32>, camTan : vec2<f32>, camWorld : mat4x4<f32>, camNear : f32, camFar : f32,
+	sunDir : vec3<f32>, sunIntensity : f32, fogDensity : f32, debugMode : f32,
+	cloudShadow : f32, windDir : vec3<f32>,
+	shapeTex : texture_3d<f32>, shapeSampler : sampler,
+	detailTex : texture_3d<f32>, detailSampler : sampler,
+	curlTex : texture_2d<f32>, curlSampler : sampler,
+	weatherTex : texture_2d<f32>, weatherSampler : sampler,
+	uLayer : vec4<f32>, uScale : vec4<f32>, uShape : vec4<f32>, uProfile : vec4<f32>,
+	uAnim : vec4<f32>, uLight : vec4<f32>, uLight2 : vec4<f32> ) -> vec4<f32> {
 	let cloud = mix( vec4<f32>( 0.0, 0.0, 0.0, 1.0 ), cloudIn, cloudsOn );
 	let ndc = vec2<f32>( uv.x * 2.0 - 1.0, 1.0 - uv.y * 2.0 );
 	let rd = normalize( ( camWorld * vec4<f32>( ndc * camTan, -1.0, 0.0 ) ).xyz );
@@ -27,9 +72,15 @@ fn composite( uv : vec2<f32>, sceneColor : vec4<f32>, sceneDepth : f32, cloudIn 
 	if ( sceneDepth < 1.0 ) {
 		let viewZ = ( camNear * camFar ) / ( ( camFar - camNear ) * sceneDepth - camFar );
 		let dist = -viewZ / max( dot( rd, camFwd ), 1e-4 );
+		var lit = sceneColor.rgb;
+		if ( cloudsOn > 0.5 ) {
+			lit *= cloudShadowFactor( camPos + rd * dist, sunDir, windDir, cloudShadow,
+				shapeTex, shapeSampler, detailTex, detailSampler, curlTex, curlSampler,
+				weatherTex, weatherSampler, uLayer, uScale, uShape, uProfile, uAnim, uLight, uLight2 );
+		}
 		let fog = 1.0 - exp( -dist * fogDensity * 2.5 );
 		let haze = skyRadiance( normalize( vec3<f32>( rd.x, 0.02, rd.z ) ), sunDir, 0.0 );
-		bg = mix( sceneColor.rgb, haze, fog );
+		bg = mix( lit, haze, fog );
 	}
 	if ( debugMode == 6.0 ) { return vec4<f32>( vec3<f32>( ( 1.0 - sceneDepth ) * 20.0 ), 1.0 ); }
 	// debug views: undo the sRGB output transform so raw values show up linearly
@@ -37,7 +88,7 @@ fn composite( uv : vec2<f32>, sceneColor : vec4<f32>, sceneDepth : f32, cloudIn 
 	return vec4<f32>( bg * cloud.a + cloud.rgb, 1.0 );
 }
 `,
-	[remapWGSL, phaseWGSL, skyWGSL]
+	[...COMMON_INCLUDES, phaseWGSL, skyWGSL, cloudHelpersWGSL, cloudShadowWGSL]
 )
 
 export type SunLightOptions = {
@@ -92,6 +143,7 @@ export class NubisCloudscape {
 		fogDensity: uniform(0),
 		cloudSize: uniform(new THREE.Vector2(1, 1)),
 		cloudsOn: uniform(1),
+		cloudShadow: uniform(0),
 	}
 	// packUniforms ghi thẳng vào value của các uniform trên
 	#packed: PackedUniforms = {
@@ -178,6 +230,7 @@ export class NubisCloudscape {
 			sceneDepth: depth.r,
 			cloudIn: texture(this.#cloudRT.texture, uv()),
 			cloudsOn: u.cloudsOn,
+			camPos: u.camPos,
 			camTan: u.camTan,
 			camWorld: u.camWorld,
 			camNear: u.camNear,
@@ -186,6 +239,23 @@ export class NubisCloudscape {
 			sunIntensity: u.sunIntensity,
 			fogDensity: u.fogDensity,
 			debugMode: u.uMarch.z,
+			cloudShadow: u.cloudShadow,
+			windDir: u.windDir,
+			shapeTex: shape,
+			shapeSampler: shape,
+			detailTex: detail,
+			detailSampler: detail,
+			curlTex: curl,
+			curlSampler: curl,
+			weatherTex: weather,
+			weatherSampler: weather,
+			uLayer: u.uLayer,
+			uScale: u.uScale,
+			uShape: u.uShape,
+			uProfile: u.uProfile,
+			uAnim: u.uAnim,
+			uLight: u.uLight,
+			uLight2: u.uLight2,
 		})
 		this.#compositeQuad = new THREE.QuadMesh(comp)
 		this.#syncUniforms()
@@ -297,5 +367,6 @@ export class NubisCloudscape {
 		u.windDir.value.set(Math.sin(wd), 0, Math.cos(wd))
 		packUniforms(p, this.#time, this.#packed)
 		u.fogDensity.value = this.#packed.fogDensity
+		u.cloudShadow.value = p.cloudShadow
 	}
 }

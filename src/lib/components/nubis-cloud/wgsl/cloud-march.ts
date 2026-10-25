@@ -11,7 +11,7 @@ import { wgsl, wgslFn } from 'three/tsl'
 import { COMMON_INCLUDES, phaseWGSL } from './common'
 import { skyWGSL } from './sky'
 
-const cloudHelpersWGSL = wgsl(/* wgsl */ `
+export const cloudHelpersWGSL = wgsl(/* wgsl */ `
 // ray / sphere → (tNear, tFar), (-1,-1) on miss
 fn raySphere( ro : vec3<f32>, rd : vec3<f32>, c : vec3<f32>, r : f32 ) -> vec2<f32> {
 	let oc = ro - c;

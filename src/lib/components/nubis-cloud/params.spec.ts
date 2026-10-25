@@ -69,4 +69,9 @@ describe('gói uniform', () => {
 		expect(out.uMarch.x).toBe(64)
 		expect(out.uAnim.w).toBe(1)
 	})
+
+	it('bóng mây mặc định nằm trong 0 – 1', () => {
+		expect(defaultNubisParams.cloudShadow).toBeGreaterThan(0)
+		expect(defaultNubisParams.cloudShadow).toBeLessThanOrEqual(1)
+	})
 })
