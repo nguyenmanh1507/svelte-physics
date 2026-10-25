@@ -1,7 +1,7 @@
 # svelte-physics
 
-<video src="static/volumetric-cloudscapes.mp4" controls muted loop width="100%">
-  <a href="static/volumetric-cloudscapes.mp4">Watch the volumetric cloudscapes demo</a>
+<video src="static/volumetric-cloudscapes-2.mp4" controls muted loop width="100%">
+  <a href="static/volumetric-cloudscapes-2.mp4">Watch the volumetric cloudscapes demo</a>
 </video>
 
 _Demo: a Nubis-style volumetric cloudscape over a low-poly city, rendered in real time with Three.js._

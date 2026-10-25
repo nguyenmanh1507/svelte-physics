@@ -1,4 +1,8 @@
-import { defaultNubisParams, type NubisParams } from '#lib/components/nubis-cloud/index.js'
+import {
+	defaultNubisParams,
+	type LightShaftParams,
+	type NubisParams,
+} from '#lib/components/nubis-cloud/index.js'
 
 // Nubis tính bằng mét; thành phố 300 unit nên thu nhỏ cả bầu trời: tầng mây ≈ 60 – 130 unit,
 // camera (cao 170 – 500) nhìn xuyên qua các khoảng trống giữa mây xuống thành phố.
@@ -31,12 +35,10 @@ export const CITY_SKY: Partial<NubisParams> = {
 // bộ thông số đầy đủ để slider luôn có giá trị
 export const citySky = (): NubisParams => ({ ...defaultNubisParams, ...CITY_SKY })
 
-type NumericKey = {
-	[K in keyof NubisParams]: NubisParams[K] extends number ? K : never
-}[keyof NubisParams]
+type NumericKey<T> = { [K in keyof T]: T[K] extends number ? K : never }[keyof T]
 
-export type CloudControl = {
-	key: NumericKey
+export type ParamControl<T> = {
+	key: NumericKey<T>
 	label: string
 	min: number
 	max: number
@@ -44,6 +46,8 @@ export type CloudControl = {
 }
 
 // Khoảng giá trị lấy theo GUI của bản gốc (docs/nubis-webgpu/src/main.js), độ dài tính bằng mét.
+export type CloudControl = ParamControl<NubisParams>
+
 export const CLOUD_CONTROLS: { group: string; controls: CloudControl[] }[] = [
 	{
 		group: 'Mặt trời',
@@ -133,4 +137,17 @@ export const DEBUG_VIEWS: { value: number; label: string }[] = [
 	{ value: 5, label: 'Curl noise' },
 	{ value: 6, label: 'Depth scene' },
 	{ value: 7, label: 'Mật độ (cheap / full / alpha)' },
+]
+
+// Tia nắng xuyên mây (pass phụ NubisLightShafts), độ dài tính bằng mét như mây
+export const SHAFT_CONTROLS: ParamControl<LightShaftParams>[] = [
+	{ key: 'intensity', label: 'Cường độ', min: 0, max: 4, step: 0.05 },
+	{ key: 'density', label: 'Mật độ không khí (1/m)', min: 0, max: 0.0005, step: 0.00001 },
+	{ key: 'anisotropy', label: 'Hướng tán xạ (g)', min: -0.5, max: 0.9, step: 0.01 },
+	{ key: 'steps', label: 'Số bước', min: 8, max: 64, step: 1 },
+	{ key: 'maxDistance', label: 'Tầm xa (m)', min: 2000, max: 60_000, step: 500 },
+	{ key: 'resolution', label: 'Độ phân giải', min: 0.25, max: 1, step: 0.25 },
+	{ key: 'sharpness', label: 'Độ sắc viền', min: 0, max: 1, step: 0.01 },
+	{ key: 'gapThreshold', label: 'Ngưỡng khe mây', min: 0.02, max: 0.9, step: 0.01 },
+	{ key: 'blurLength', label: 'Độ dài làm mịn (px)', min: 0, max: 64, step: 1 },
 ]

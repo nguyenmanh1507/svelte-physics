@@ -2,6 +2,8 @@
 	import { onMount } from 'svelte'
 	import CityRoads from './components/city-roads.svelte'
 	import CloudControls from './components/cloud-controls.svelte'
+	import ShaftControls from './components/shaft-controls.svelte'
+	import { defaultLightShaftParams } from '#lib/components/nubis-cloud/index.js'
 	import { ROAD_ASSETS } from './components/road-assets'
 	import { BUILDING_MAP } from './components/building-map'
 	import { gallery, ROAD_MAP } from './components/road-map'
@@ -14,6 +16,7 @@
 	let sky = $state(citySky())
 	let showPanel = $state(true)
 	let toon = $state(true)
+	let shafts = $state({ ...defaultLightShaftParams })
 	let headerBottom = $state(64)
 
 	onMount(() => {
@@ -51,6 +54,7 @@
 				placements={showGallery ? gallery() : ROAD_MAP}
 				buildings={showGallery ? [] : BUILDING_MAP}
 				{toon}
+				lightShafts={shafts}
 				labels={showGallery}
 				clouds={showClouds && !showGallery}
 				{sky}
@@ -161,6 +165,7 @@
 				</p>
 			</header>
 			<CloudControls bind:params={sky} disabled={!showClouds || showGallery} />
+			<ShaftControls bind:params={shafts} disabled={!showClouds || showGallery} />
 		</section>
 	</aside>
 </section>

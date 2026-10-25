@@ -7,6 +7,7 @@
 	import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js'
 	import {
 		NubisSky,
+		type LightShaftParams,
 		type NubisParams,
 		type NubisSceneHooks,
 		type NubisSkyContext,
@@ -23,6 +24,7 @@
 		clouds = false,
 		sky = {},
 		toon = true,
+		lightShafts = false,
 		class: className = 'aspect-square w-full rounded-lg bg-slate-900 lg:aspect-4/3',
 		onload,
 	}: {
@@ -32,6 +34,7 @@
 		clouds?: boolean // hiện mây thể tích trôi trên thành phố
 		sky?: Partial<NubisParams> // cấu hình bầu trời Nubis, đổi trực tiếp không cần dựng lại scene
 		toon?: boolean // cel shading: bóng chia bậc kiểu Breath of the Wild
+		lightShafts?: Partial<LightShaftParams> | false // tia nắng xuyên mây
 		class?: string // kích thước khung canvas
 		onload?: (info: { assets: number; instances: number; buildings: number }) => void
 	} = $props()
@@ -257,7 +260,7 @@
 	}
 </script>
 
-<NubisSky params={skyParams} {setup} class={className}>
+<NubisSky params={skyParams} {lightShafts} {setup} class={className}>
 	<div bind:this={labelLayer} class="pointer-events-none absolute inset-0"></div>
 	<div bind:this={statsHost} class="absolute top-2 left-2 z-10" aria-label="FPS"></div>
 	{#if loading}

@@ -148,6 +148,17 @@ export const nubisPresets: Record<string, Partial<NubisParams>> = {
 		erosion: 0.3,
 		sunElevation: 20,
 	},
+	// mây tầng tích dày, tối, có khe hở để nắng xuyên thành tia (dùng kèm NubisLightShafts)
+	'Tia nắng (mây dày có khe)': {
+		coverageBias: 0.68,
+		coverageMul: 1.05,
+		typeBias: 0.4,
+		precipBias: 0.25,
+		erosion: 0.4,
+		sunElevation: 22,
+		sunIntensity: 30,
+		fogDensity: 0.000004,
+	},
 	Sunset: {
 		coverageBias: 0.5,
 		typeBias: 0.6,

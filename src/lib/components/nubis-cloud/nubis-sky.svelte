@@ -21,6 +21,7 @@
 <script lang="ts">
 	import { onMount, type Snippet } from 'svelte'
 	import { PerspectiveCamera, Scene, Timer, WebGPURenderer } from 'three/webgpu'
+	import { NubisLightShafts, type LightShaftParams } from './light-shafts'
 	import { NubisCloudscape } from './nubis-cloudscape'
 	import type { NubisParams } from './params'
 
@@ -29,12 +30,14 @@
 		setup,
 		class: className = 'aspect-square w-full rounded-lg bg-slate-900',
 		maxPixelRatio = 1.5,
+		lightShafts = false,
 		children,
 	}: {
 		params?: Partial<NubisParams>
 		setup: (ctx: NubisSkyContext) => NubisSceneHooks | void
 		class?: string
 		maxPixelRatio?: number
+		lightShafts?: Partial<LightShaftParams> | false // tia nắng xuyên mây, false = không tạo pass
 		children?: Snippet
 	} = $props()
 
@@ -47,6 +50,22 @@
 	$effect(() => {
 		const next = $state.snapshot(params) as Partial<NubisParams>
 		cloudscape?.setParams(next)
+	})
+
+	// tia nắng là pass phụ của cloudscape: tạo / bỏ / cập nhật theo prop (cloudscape.dispose giải phóng nó)
+	let shafts: NubisLightShafts | null = null
+	$effect(() => {
+		const config =
+			lightShafts === false ? null : ($state.snapshot(lightShafts) as Partial<LightShaftParams>)
+		if (!cloudscape) return
+		if (config && !shafts) {
+			shafts = new NubisLightShafts(cloudscape, config)
+			cloudscape.addPass(shafts)
+		} else if (!config && shafts) {
+			cloudscape.removePass(shafts)
+			shafts.dispose()
+			shafts = null
+		} else if (config && shafts) shafts.setParams(config)
 	})
 
 	onMount(() => {
@@ -121,6 +140,7 @@
 			hooks?.dispose?.()
 			cloudscape?.dispose()
 			cloudscape = null
+			shafts = null
 			renderer.dispose()
 		}
 	})

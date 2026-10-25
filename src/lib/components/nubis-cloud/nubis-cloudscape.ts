@@ -1,5 +1,5 @@
 import * as THREE from 'three/webgpu'
-import { texture, texture3D, uniform, uv, vec2, wgsl, wgslFn } from 'three/tsl'
+import { texture, texture3D, uniform, uv, vec2, wgslFn } from 'three/tsl'
 import { bloom } from 'three/addons/tsl/display/BloomNode.js'
 import { NubisTextures } from './noise-textures'
 import {
@@ -11,47 +11,10 @@ import {
 	type PackedUniforms,
 } from './params'
 import { cloudHelpersWGSL, cloudMarchFn } from './wgsl/cloud-march'
+import { cloudShadowWGSL } from './wgsl/cloud-shadow'
 import { COMMON_INCLUDES, phaseWGSL } from './wgsl/common'
 import { skyWGSL } from './wgsl/sky'
 import { stylizeFn } from './wgsl/stylize'
-
-// Cloud shadows on the scene: from a scene point, 3 cheap density samples along the sun ray
-// through the cloud layer -> Beer-Lambert transmittance. Same density function as the march,
-// so shadows sit under the clouds and drift with the wind. Soft by design (no detail erosion).
-const cloudShadowWGSL = wgsl(/* wgsl */ `
-fn cloudShadowFactor(
-	p : vec3<f32>, sunDir : vec3<f32>, windDir : vec3<f32>, strength : f32,
-	shapeTex : texture_3d<f32>, shapeSampler : sampler,
-	detailTex : texture_3d<f32>, detailSampler : sampler,
-	curlTex : texture_2d<f32>, curlSampler : sampler,
-	weatherTex : texture_2d<f32>, weatherSampler : sampler,
-	uLayer : vec4<f32>, uScale : vec4<f32>, uShape : vec4<f32>, uProfile : vec4<f32>,
-	uAnim : vec4<f32>, uLight : vec4<f32>, uLight2 : vec4<f32>
-) -> f32 {
-	// low sun: shadows would stretch to infinity -> fade them out at sunrise / sunset
-	let sunFade = smoothstep( 0.02, 0.15, sunDir.y );
-	if ( strength <= 0.0 || sunFade <= 0.0 ) { return 1.0; }
-	let planetR = uLayer.z;
-	let planetCenter = vec3<f32>( 0.0, -planetR, 0.0 );
-	let inner = raySphere( p, sunDir, planetCenter, planetR + uLayer.x );
-	let outer = raySphere( p, sunDir, planetCenter, planetR + uLayer.y );
-	let t0 = max( inner.y, 0.0 );
-	let t1 = outer.y;
-	if ( t1 <= t0 ) { return 1.0; }
-	let segLen = ( t1 - t0 ) / 3.0;
-	var depth = 0.0;
-	for ( var i : i32 = 0; i < 3; i++ ) {
-		let sp = p + sunDir * ( t0 + segLen * ( f32( i ) + 0.5 ) );
-		let hf = heightFraction( sp, planetCenter, planetR, uLayer.x, uLayer.y );
-		let w = sampleWeather( weatherTex, weatherSampler, sp, uScale.x );
-		depth += sampleCloudDensity( sp, w, hf, true, windDir, shapeTex, shapeSampler,
-			detailTex, detailSampler, curlTex, curlSampler, uScale, uShape, uProfile, uAnim, uLight2 );
-	}
-	// cheap density has no erosion and overestimates -> halve the optical depth
-	let transmittance = exp( -depth * uLight.x * segLen * 0.5 );
-	return mix( 1.0, transmittance, strength * sunFade );
-}
-`)
 
 // Composite: sky background + cloud shadows + aerial perspective + clouds (premultiplied over).
 const compositeFn = wgslFn(
@@ -93,6 +56,17 @@ fn composite( uv : vec2<f32>, sceneColor : vec4<f32>, sceneDepth : f32, cloudIn 
 	[...COMMON_INCLUDES, phaseWGSL, skyWGSL, cloudHelpersWGSL, cloudShadowWGSL]
 )
 
+// Pass phụ chạy sau composite, vẽ cộng dồn vào ảnh HDR trước hậu kỳ (vd. tia nắng xuyên mây).
+export interface NubisPass {
+	render(
+		renderer: THREE.WebGPURenderer,
+		hdr: THREE.RenderTarget,
+		camera: THREE.PerspectiveCamera
+	): void
+	setSize(width: number, height: number): void
+	dispose(): void
+}
+
 export type SunLightOptions = {
 	intensity?: number // cường độ đèn mặt trời lúc giữa trưa
 	hemi?: THREE.HemisphereLight
@@ -128,6 +102,7 @@ export class NubisCloudscape {
 	#postQuad: THREE.QuadMesh
 	#hdrRT: THREE.RenderTarget // kết quả composite, đầu vào của hậu kỳ
 	#bloom: ReturnType<typeof bloom>
+	#passes: NubisPass[] = []
 
 	// uniform dùng chung cho pass mây và composite
 	#u = {
@@ -307,6 +282,28 @@ export class NubisCloudscape {
 		this.#syncUniforms()
 	}
 
+	// Những gì một pass phụ cần dùng lại: noise texture, uniform chung, depth, ảnh mây.
+	get shared() {
+		return {
+			params: this.params,
+			uniforms: this.#u,
+			ready: this.#ready,
+			textures: this.textures,
+			depthTexture: this.#depthTexture,
+			cloudTexture: this.#cloudRT.texture,
+		}
+	}
+
+	addPass(pass: NubisPass) {
+		this.#passes.push(pass)
+		const { x, y } = this.#size
+		pass.setSize(x, y)
+	}
+
+	removePass(pass: NubisPass) {
+		this.#passes = this.#passes.filter((p) => p !== pass)
+	}
+
 	// Sinh noise texture bằng compute shader, gọi một lần trước frame đầu tiên.
 	async init() {
 		const ms = await this.textures.generateAll()
@@ -333,6 +330,7 @@ export class NubisCloudscape {
 		this.#u.texel.value.set(1 / w, 1 / h)
 		const scale = this.params.renderScale
 		this.#cloudRT.setSize(Math.ceil(w * scale), Math.ceil(h * scale))
+		for (const pass of this.#passes) pass.setSize(w, h)
 	}
 
 	render(scene: THREE.Scene, camera: THREE.PerspectiveCamera, delta = 0) {
@@ -368,15 +366,20 @@ export class NubisCloudscape {
 		}
 
 		// 3. composite: bầu trời + bóng mây + sương + mây. Debug view luôn vẽ thẳng, không hậu kỳ.
-		const post = p.post && p.debugMode === 0
-		renderer.setRenderTarget(post ? this.#hdrRT : target)
+		const debug = p.debugMode > 0
+		const viaHdr = !debug && (p.post || this.#passes.length > 0)
+		renderer.setRenderTarget(viaHdr ? this.#hdrRT : target)
 		this.#compositeQuad.render(renderer)
+		if (!viaHdr) return
 
-		// 4. hậu kỳ stylized → màn hình (renderer áp tone mapping + sRGB)
-		if (post) {
-			renderer.setRenderTarget(target)
-			this.#postQuad.render(renderer)
-		}
+		// 4. pass phụ cộng vào ảnh HDR
+		for (const pass of this.#passes) pass.render(renderer, this.#hdrRT, camera)
+
+		// 5. hậu kỳ stylized → màn hình (renderer áp tone mapping + sRGB).
+		//    Tắt hậu kỳ mà có pass phụ thì chạy với tham số trung tính, như một lần copy.
+		this.#syncPost(p.post)
+		renderer.setRenderTarget(target)
+		this.#postQuad.render(renderer)
 	}
 
 	// Cho đèn của scene đi theo mặt trời Nubis: hướng, màu (đỏ dần lúc hoàng hôn), cường độ.
@@ -400,6 +403,8 @@ export class NubisCloudscape {
 		this.#sceneRT.dispose()
 		this.#cloudRT.dispose()
 		this.#hdrRT.dispose()
+		for (const pass of this.#passes) pass.dispose()
+		this.#passes = []
 		this.#bloom.dispose()
 		this.#postMaterial.dispose()
 		this.#depthTexture.dispose()
@@ -426,12 +431,18 @@ export class NubisCloudscape {
 		packUniforms(p, this.#time, this.#packed)
 		u.fogDensity.value = this.#packed.fogDensity
 		u.cloudShadow.value = p.cloudShadow
-		u.outline.value = p.outline
-		u.saturation.value = p.saturation
-		u.contrast.value = p.contrast
-		u.warmth.value = p.warmth
-		u.vignette.value = p.vignette
-		this.#bloom.strength.value = p.bloomStrength
+		this.#syncPost(p.post)
+	}
+
+	#syncPost(on: boolean) {
+		const p = this.params
+		const u = this.#u
+		u.outline.value = on ? p.outline : 0
+		u.saturation.value = on ? p.saturation : 1
+		u.contrast.value = on ? p.contrast : 1
+		u.warmth.value = on ? p.warmth : 0
+		u.vignette.value = on ? p.vignette : 0
+		this.#bloom.strength.value = on ? p.bloomStrength : 0
 		this.#bloom.threshold.value = p.bloomThreshold
 	}
 }

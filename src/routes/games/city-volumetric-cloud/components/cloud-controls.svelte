@@ -1,13 +1,10 @@
 <script lang="ts">
 	import { nubisPresets, type NubisParams } from '#lib/components/nubis-cloud/index.js'
+	import ParamSlider from './param-slider.svelte'
 	import { CLOUD_CONTROLS, DEBUG_VIEWS, RENDER_SCALES, citySky } from './sky-config'
 
 	let { params = $bindable(), disabled = false }: { params: NubisParams; disabled?: boolean } =
 		$props()
-
-	// hiện đúng số chữ số thập phân của step (fogDensity 0.000008 thay vì 0.000008000001)
-	const format = (value: number, step: number) =>
-		value.toFixed((String(step).split('.')[1] ?? '').length)
 
 	const focus =
 		'focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 focus-visible:outline-none'
@@ -35,24 +32,7 @@
 			</summary>
 			<div class="grid gap-3 border-t border-slate-800 px-3 py-3">
 				{#each controls as c (c.key)}
-					<label class="grid gap-1.5">
-						<span class="flex items-center justify-between gap-3 text-xs">
-							<span class="font-medium text-slate-300">{c.label}</span>
-							<output
-								class="min-w-14 rounded-md border border-slate-700 bg-slate-900 px-2 py-1 text-right font-mono text-xs leading-none font-semibold text-cyan-300 tabular-nums"
-							>
-								{format(params[c.key], c.step)}
-							</output>
-						</span>
-						<input
-							class="h-5 w-full cursor-pointer accent-cyan-400 {focus}"
-							type="range"
-							min={c.min}
-							max={c.max}
-							step={c.step}
-							bind:value={params[c.key]}
-						/>
-					</label>
+					<ParamSlider {...c} bind:value={params[c.key]} />
 				{/each}
 
 				{#if group === 'Hậu kỳ'}
