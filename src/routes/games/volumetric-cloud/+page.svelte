@@ -1,6 +1,9 @@
 <script lang="ts">
-	import VolumeCanvas from './components/volumetric-cloud.svelte'
-	import { defaultParams, type VolumeParams } from './components/params'
+	import {
+		VolumetricCloud as VolumeCanvas,
+		defaultParams,
+		type VolumeParams,
+	} from '#lib/components/volumetric-cloud/index.js'
 
 	const stepNames = [
 		'1. Giao tia - cầu',

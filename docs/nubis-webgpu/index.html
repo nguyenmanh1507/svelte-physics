@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<title>Nubis · Realtime Volumetric Cloudscapes · Three.js WebGPU</title>
+	<style>
+		html, body { margin: 0; height: 100%; overflow: hidden; background: #0b1020; font-family: system-ui, sans-serif; }
+		canvas { display: block; }
+		#overlay {
+			position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+			color: #dfe7f5; font-size: 15px; text-align: center; padding: 24px; pointer-events: none;
+			background: rgba(8, 12, 24, 0.85);
+		}
+		#help {
+			position: fixed; left: 12px; bottom: 12px; color: #cfd8e8; font-size: 12px; line-height: 1.5;
+			background: rgba(0,0,0,0.35); padding: 8px 10px; border-radius: 6px; pointer-events: none;
+		}
+		#help b { color: #fff; }
+	</style>
+	<script type="importmap">
+	{
+		"imports": {
+			"three": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.webgpu.js",
+			"three/webgpu": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.webgpu.js",
+			"three/tsl": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.tsl.js",
+			"three/addons/": "https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/"
+		}
+	}
+	</script>
+</head>
+<body>
+	<div id="overlay">Starting WebGPU…</div>
+	<div id="help"><b>Drag</b> look · <b>W A S D</b> move · <b>E / Q</b> up / down · <b>Shift</b> fast</div>
+	<script type="module" src="./src/main.js"></script>
+</body>
+</html>
