@@ -11,4 +11,4 @@
 	})
 </script>
 
-<div bind:this={canvasContainer} class="relative h-[720px] w-[1280px]"></div>
+<div bind:this={canvasContainer} class="relative h-180 w-7xl"></div>

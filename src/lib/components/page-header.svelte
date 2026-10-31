@@ -118,6 +118,10 @@
 					label: 'City Roads',
 					href: '/games/city-volumetric-cloud',
 				},
+				{
+					label: 'Lighthouse Isle',
+					href: '/games/lighthouse-isle',
+				},
 			],
 		},
 		{
