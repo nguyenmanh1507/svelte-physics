@@ -126,6 +126,7 @@
 					label: 'Infinite Grass',
 					href: '/games/infinite-grass',
 				},
+				{ label: 'Lighthouse Isle', href: '/games/lighthouse-isle' },
 			],
 		},
 		{
