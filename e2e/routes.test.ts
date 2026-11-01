@@ -50,6 +50,11 @@ const routes = [
 		description: 'Volumetric Cloud 2 page',
 	},
 	{
+		path: '/games/infinite-grass',
+		title: 'Svelte Physics',
+		description: 'Infinite Grass page',
+	},
+	{
 		path: '/jolt-physics/example',
 		title: 'Svelte Physics',
 		description: 'Jolt Physics - Example page',

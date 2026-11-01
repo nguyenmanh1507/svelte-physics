@@ -1,11 +1,12 @@
 <script lang="ts">
 	import { focusRing } from './focus'
+	import type { SelectOption } from './types'
 
 	let {
 		label,
 		options,
 		value = $bindable(),
-	}: { label: string; options: { label: string; value: number }[]; value: number } = $props()
+	}: { label: string; options: SelectOption[]; value: number } = $props()
 </script>
 
 <label class="flex items-center justify-between gap-3 text-sm">

@@ -122,6 +122,10 @@
 					label: 'City Volumetric Cloud',
 					href: '/games/city-volumetric-cloud',
 				},
+				{
+					label: 'Infinite Grass',
+					href: '/games/infinite-grass',
+				},
 			],
 		},
 		{

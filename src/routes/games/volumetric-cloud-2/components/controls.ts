@@ -1,22 +1,12 @@
+import type {
+	RangeConfig as Range,
+	SelectOption,
+	ToggleConfig as Toggle,
+} from '#lib/components/inspector/index.js'
 import type { CloudParams } from '#lib/components/volumetric-cloud-2/index.js'
 
-type NumberKey = {
-	[K in keyof CloudParams]: CloudParams[K] extends number ? K : never
-}[keyof CloudParams]
-type BooleanKey = {
-	[K in keyof CloudParams]: CloudParams[K] extends boolean ? K : never
-}[keyof CloudParams]
-
-export type RangeConfig = {
-	key: NumberKey
-	label: string
-	min: number
-	max: number
-	step: number
-	hint?: string
-}
-
-export type ToggleConfig = { key: BooleanKey; label: string; note?: string }
+type RangeConfig = Range<CloudParams>
+type ToggleConfig = Toggle<CloudParams>
 
 export const WEATHER_RANGES: RangeConfig[] = [
 	{ key: 'coverage', label: 'Coverage', min: 0, max: 1, step: 0.01 },
@@ -48,7 +38,7 @@ export const LIGHTING_TOGGLES: ToggleConfig[] = [
 	{ key: 'usePowder', label: 'Powder (viền tối)' },
 ]
 
-export const RENDER_SCALES = [
+export const RENDER_SCALES: SelectOption[] = [
 	{ label: '1/4', value: 0.25 },
 	{ label: '1/2', value: 0.5 },
 	{ label: '3/4', value: 0.75 },
