@@ -61,6 +61,7 @@ export function createWater({ camera, sunDir, waves, timeUniform }: WaterOptions
 	/* water surface */
 	const waterMat = new THREE.ShaderMaterial({
 		uniforms: waterUniforms,
+		side: THREE.DoubleSide,
 		vertexShader: WATER_SURFACE_VERTEX,
 		fragmentShader: WATER_SURFACE_FRAGMENT,
 	})
@@ -143,3 +144,5 @@ export function createWater({ camera, sunDir, waves, timeUniform }: WaterOptions
 
 	return { water, walls, rt, uniforms: waterUniforms, addRipple, setSize, update, dispose }
 }
+
+export type Water = ReturnType<typeof createWater>

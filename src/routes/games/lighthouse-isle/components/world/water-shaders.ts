@@ -45,6 +45,19 @@ export const WATER_SURFACE_FRAGMENT = /* glsl */ `
       vec3 rd = normalize(vWPos - uCamPos);
       float wd = length(vWPos - uCamPos);
       vec3 n = normalize(vNrm);
+      if (!gl_FrontFacing) {
+        // nhìn từ dưới lên: trong góc tới hạn (cos ≈ 0.66) thấy trên mặt nước, ngoài đó phản xạ toàn phần
+        float cosI = dot(rd, n);
+        float window = mix(smoothstep(0.58, 0.74, cosI), step(0.66, cosI), uToon);
+        vec3 above = texture2D(tColor, suv + n.xz * 0.05).rgb * 1.15;
+        vec3 R = refract(rd, -n, 1.33);
+        above += uSunCol * pow(max(dot(R, uSunDir), 0.0), 24.0) * 1.6;
+        float sparkle = vnoise(vWPos.xz * 1.3 + uTime * 0.7);
+        vec3 mirror = uDeep * (0.85 + 0.35 * sparkle);
+        gl_FragColor = vec4(mix(mirror, above, window), 1.0);
+        #include <colorspace_fragment>
+        return;
+      }
       if (dot(n, rd) > 0.0) n = -n;
       float sd = sceneDist(suv, rd);
       float thick = max(sd - wd, 0.0);

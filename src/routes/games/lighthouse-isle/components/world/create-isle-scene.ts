@@ -11,9 +11,10 @@ import { createRocks } from './rocks'
 import { addSeabed } from './seabed'
 import { createClouds, createSkyTexture } from './sky'
 import { createSplash } from './splash'
-import { floorH, HALF } from './terrain'
+import { floorH, HALF, smooth } from './terrain'
 import { createToonKit } from './toon-material'
 import type { WorldContext } from './types'
+import { createUnderwaterPost } from './underwater-post'
 import {
 	addAnchor,
 	addCoral,
@@ -35,6 +36,8 @@ export type IsleSettings = {
 type IsleOptions = {
 	onWaterTap?: () => void
 }
+
+const HOME_TARGET = new THREE.Vector3(0, -1, 0)
 
 function createSun(sunDir: THREE.Vector3) {
 	const sun = new THREE.DirectionalLight(0xfff4dc, 2.4)
@@ -78,15 +81,16 @@ export function createIsleScene(host: HTMLElement, { onWaterTap }: IsleOptions =
 	const scene = new THREE.Scene()
 	scene.background = createSkyTexture()
 
-	const camera = new THREE.PerspectiveCamera(40, innerWidth / innerHeight, 1, 900)
+	const camera = new THREE.PerspectiveCamera(40, innerWidth / innerHeight, 0.3, 900)
 	camera.position.set(118, 92, 128)
 
 	const controls = new OrbitControls(camera, renderer.domElement)
 	controls.enableDamping = true
-	controls.target.set(0, -1, 0)
-	controls.minDistance = 40
+	controls.zoomToCursor = true
+	controls.target.copy(HOME_TARGET)
+	controls.minDistance = 8
 	controls.maxDistance = 320
-	controls.maxPolarAngle = 1.42 // Not allow go below box
+	controls.maxPolarAngle = 1.42
 
 	const sunDir = new THREE.Vector3(-0.55, 0.72, 0.42).normalize()
 	const sun = createSun(sunDir)
@@ -118,6 +122,7 @@ export function createIsleScene(host: HTMLElement, { onWaterTap }: IsleOptions =
 		toonUniform: water.uniforms.uToon,
 	})
 	scene.add(water.water, water.walls, splash.particles, beam)
+	const post = createUnderwaterPost({ camera, waterUniforms: water.uniforms })
 
 	function setPass(opaque: boolean) {
 		water.water.visible = water.walls.visible = splash.particles.visible = beam.visible = !opaque
@@ -131,11 +136,36 @@ export function createIsleScene(host: HTMLElement, { onWaterTap }: IsleOptions =
 		renderer.setSize(width, height)
 		const res = renderer.getDrawingBufferSize(new THREE.Vector2())
 		water.setSize(res.x, res.y)
+		post.setSize(res.x, res.y)
 		splash.setViewportHeight(res.y, camera.fov)
 	})
 	observer.observe(host)
 
 	let simT = 0
+	let submerge = 0
+
+	function updateSubmerge(dt: number) {
+		const { x, y, z } = camera.position
+		const inBox = Math.max(Math.abs(x), Math.abs(z)) < HALF
+		if (inBox) camera.position.y = Math.max(y, floorH(x, z) + 1.5)
+		if (inBox && y < 0) {
+			// target nằm sát đáy thì camera không ngước lên được
+			const pivot = controls.target
+			const lifted = Math.min(floorH(pivot.x, pivot.z) + 6, -1)
+			if (pivot.y < lifted) pivot.y += (lifted - pivot.y) * Math.min(1, dt * 3)
+		}
+		const target = inBox ? smooth(-0.4, 0.6, waves.waveHeight(x, z, simT) - camera.position.y) : 0
+		submerge += (target - submerge) * Math.min(1, dt * 8)
+		if (submerge < 0.001) submerge = 0
+
+		// chỉ dưới nước mới được ngước lên; trên mặt nước không cho xoay xuống dưới hộp
+		const maxPolar = submerge > 0.5 ? 2 : 1.42
+		controls.maxPolarAngle += (maxPolar - controls.maxPolarAngle) * Math.min(1, dt * 2)
+
+		// zoomToCursor làm lệch pivot, nên khi lùi ra xa thì đưa hộp về giữa khung hình
+		if (camera.position.distanceTo(controls.target) > 100)
+			controls.target.lerp(HOME_TARGET, Math.min(1, dt * 1.5))
+	}
 
 	/* tap the water to drop a pebble */
 	const canvas = renderer.domElement
@@ -166,7 +196,7 @@ export function createIsleScene(host: HTMLElement, { onWaterTap }: IsleOptions =
 			const p = new THREE.Vector3()
 			if (!ray.ray.intersectPlane(plane, p) || Math.abs(p.x) > HALF - 1 || Math.abs(p.z) > HALF - 1)
 				return
-			if (floorH(p.x, p.z) > -0.3) return
+			if (floorH(p.x, p.z) > -0.3 || submerge > 0.5) return
 			water.addRipple(p.x, p.z, simT)
 			splash.dropPebble(p.x, p.z)
 			onWaterTap?.()
@@ -190,6 +220,7 @@ export function createIsleScene(host: HTMLElement, { onWaterTap }: IsleOptions =
 		updateClouds(dt)
 
 		controls.update()
+		updateSubmerge(dt)
 		water.update()
 
 		// pass 1 chụp màu + depth của phần đặc để shader nước đọc lại ở pass 2
@@ -197,8 +228,9 @@ export function createIsleScene(host: HTMLElement, { onWaterTap }: IsleOptions =
 		renderer.setRenderTarget(water.rt)
 		renderer.render(scene, camera)
 		setPass(false)
-		renderer.setRenderTarget(null)
+		renderer.setRenderTarget(submerge > 0 ? post.target : null)
 		renderer.render(scene, camera)
+		if (submerge > 0) post.render(renderer, submerge)
 		stats.end()
 	})
 
@@ -226,6 +258,7 @@ export function createIsleScene(host: HTMLElement, { onWaterTap }: IsleOptions =
 			if (scene.background instanceof THREE.Texture) scene.background.dispose()
 			toonKit.dispose()
 			water.dispose()
+			post.dispose()
 			sun.dispose()
 			renderer.dispose()
 			renderer.domElement.remove()
