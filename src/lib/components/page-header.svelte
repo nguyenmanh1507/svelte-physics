@@ -127,6 +127,7 @@
 					href: '/games/infinite-grass',
 				},
 				{ label: 'Lighthouse Isle', href: '/games/lighthouse-isle' },
+				{ label: 'Streaming Terrain', href: '/games/streaming-terrain' },
 			],
 		},
 		{

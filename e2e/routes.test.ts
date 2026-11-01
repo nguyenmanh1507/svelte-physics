@@ -55,6 +55,11 @@ const routes = [
 		description: 'Infinite Grass page',
 	},
 	{
+		path: '/games/streaming-terrain',
+		title: 'Svelte Physics',
+		description: 'Streaming Terrain page',
+	},
+	{
 		path: '/jolt-physics/example',
 		title: 'Svelte Physics',
 		description: 'Jolt Physics - Example page',
