@@ -45,6 +45,11 @@ const routes = [
 		description: 'Match 3 game page',
 	},
 	{
+		path: '/games/volumetric-cloud-2',
+		title: 'Svelte Physics',
+		description: 'Volumetric Cloud 2 page',
+	},
+	{
 		path: '/jolt-physics/example',
 		title: 'Svelte Physics',
 		description: 'Jolt Physics - Example page',

@@ -115,7 +115,11 @@
 					href: '/games/volumetric-cloud',
 				},
 				{
-					label: 'City Roads',
+					label: 'Volumetric Cloud 2',
+					href: '/games/volumetric-cloud-2',
+				},
+				{
+					label: 'City Volumetric Cloud',
 					href: '/games/city-volumetric-cloud',
 				},
 			],
