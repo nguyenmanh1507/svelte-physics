@@ -1,4 +1,4 @@
-// Gradient noise 3D
+// Gradient noise 3D (bản gốc của Inigo Quilez; hash điểm lưới đã đổi sang latticeGradient)
 //
 // The MIT License
 // Copyright © 2013 Inigo Quilez
@@ -8,7 +8,7 @@
 //
 // https://www.shadertoy.com/view/Xsl3Dl
 
-// trả về vector trong [-1, 1]
+// trả về vector trong [-1, 1]; dùng cho ngẫu nhiên từng lá cỏ
 vec3 hash(vec3 p) {
   p = vec3(
     dot(p, vec3(127.1, 311.7, 74.7)),
@@ -17,18 +17,30 @@ vec3 hash(vec3 p) {
   return -1.0 + 2.0 * fract(sin(p) * 43758.5453123);
 }
 
-// ~[-1, 1]
+// Gradient tại điểm lưới nguyên. Dùng hash số nguyên (pcg3d) thay cho hash sin() ở trên vì
+// phép nhân / XOR số nguyên cho kết quả y hệt trên CPU: terrain.ts tính lại được độ cao địa hình
+// (đặt nhân vật lên mặt đất). Hash sin() thì GPU và JS lệch nhau.
+vec3 latticeGradient(vec3 cell) {
+  uvec3 v = uvec3(ivec3(cell));
+  v = v * 1664525u + 1013904223u;
+  v.x += v.y * v.z; v.y += v.z * v.x; v.z += v.x * v.y;
+  v ^= v >> 16u;
+  v.x += v.y * v.z; v.y += v.z * v.x; v.z += v.x * v.y;
+  return vec3(v) * (2.0 / 4294967295.0) - 1.0;
+}
+
+// Gradient noise, ~[-1, 1], bằng 0 tại các điểm lưới nguyên
 float noise(vec3 p) {
   vec3 i = floor(p);
   vec3 f = fract(p);
   vec3 u = f * f * (3.0 - 2.0 * f);
 
-  return mix(mix(mix(dot(hash(i + vec3(0.0, 0.0, 0.0)), f - vec3(0.0, 0.0, 0.0)),
-                     dot(hash(i + vec3(1.0, 0.0, 0.0)), f - vec3(1.0, 0.0, 0.0)), u.x),
-                 mix(dot(hash(i + vec3(0.0, 1.0, 0.0)), f - vec3(0.0, 1.0, 0.0)),
-                     dot(hash(i + vec3(1.0, 1.0, 0.0)), f - vec3(1.0, 1.0, 0.0)), u.x), u.y),
-             mix(mix(dot(hash(i + vec3(0.0, 0.0, 1.0)), f - vec3(0.0, 0.0, 1.0)),
-                     dot(hash(i + vec3(1.0, 0.0, 1.0)), f - vec3(1.0, 0.0, 1.0)), u.x),
-                 mix(dot(hash(i + vec3(0.0, 1.0, 1.0)), f - vec3(0.0, 1.0, 1.0)),
-                     dot(hash(i + vec3(1.0, 1.0, 1.0)), f - vec3(1.0, 1.0, 1.0)), u.x), u.y), u.z);
+  return mix(mix(mix(dot(latticeGradient(i + vec3(0.0, 0.0, 0.0)), f - vec3(0.0, 0.0, 0.0)),
+                     dot(latticeGradient(i + vec3(1.0, 0.0, 0.0)), f - vec3(1.0, 0.0, 0.0)), u.x),
+                 mix(dot(latticeGradient(i + vec3(0.0, 1.0, 0.0)), f - vec3(0.0, 1.0, 0.0)),
+                     dot(latticeGradient(i + vec3(1.0, 1.0, 0.0)), f - vec3(1.0, 1.0, 0.0)), u.x), u.y),
+             mix(mix(dot(latticeGradient(i + vec3(0.0, 0.0, 1.0)), f - vec3(0.0, 0.0, 1.0)),
+                     dot(latticeGradient(i + vec3(1.0, 0.0, 1.0)), f - vec3(1.0, 0.0, 1.0)), u.x),
+                 mix(dot(latticeGradient(i + vec3(0.0, 1.0, 1.0)), f - vec3(0.0, 1.0, 1.0)),
+                     dot(latticeGradient(i + vec3(1.0, 1.0, 1.0)), f - vec3(1.0, 1.0, 1.0)), u.x), u.y), u.z);
 }

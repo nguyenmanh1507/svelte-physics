@@ -6,7 +6,7 @@ import terrain from './shaders/terrain.glsl?raw'
 import groundVert from './shaders/ground.vert?raw'
 import groundFrag from './shaders/ground.frag?raw'
 
-const GROUND_SIZE = 500 // m, cạnh mặt phẳng
+export const GROUND_SIZE = 500 // m, cạnh mặt phẳng
 const GROUND_SEGMENTS = 512 // đủ dày để vertex shader nâng theo địa hình
 
 // Mặt đất lưới, vertex shader nâng theo cùng hàm địa hình với gốc cỏ

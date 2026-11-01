@@ -30,6 +30,25 @@ export const TERRAIN_RANGES: Range[] = [
 	{ key: 'terrainHeight', label: 'Độ cao địa hình (m)', min: 0, max: 30, step: 0.5 },
 ]
 
+export const TRAMPLE_RANGES: Range[] = [
+	{ key: 'trampleRadius', label: 'Bán kính đè cỏ (m)', min: 0.5, max: 5, step: 0.1 },
+	{
+		key: 'trampleBend',
+		label: 'Độ ngả tối đa (rad)',
+		min: 0,
+		max: 1.5,
+		step: 0.05,
+		hint: '1,5 rad ≈ cỏ nằm rạp xuống đất',
+	},
+	{
+		key: 'trampleRecovery',
+		label: 'Thời gian cỏ đứng dậy (s)',
+		min: 0.1,
+		max: 10,
+		step: 0.1,
+	},
+]
+
 export const WIND_RANGES: Range[] = [
 	{ key: 'windStrength', label: 'Sức gió', min: 0, max: 4, step: 0.05 },
 	{ key: 'windSpeed', label: 'Tốc độ gió', min: 0, max: 4, step: 0.05 },

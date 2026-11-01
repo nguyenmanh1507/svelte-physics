@@ -11,6 +11,10 @@ export interface GrassParams {
 	// gió
 	windStrength: number // độ nghiêng lá theo gió
 	windSpeed: number // hệ số tốc độ thời gian của gió
+	// tương tác: vật thể đi qua đè cỏ
+	trampleRadius: number // m, bán kính vùng cỏ bị đè quanh nhân vật
+	trampleBend: number // rad, góc ngả tối đa của ngọn lá khi bị đè
+	trampleRecovery: number // s, thời gian cỏ đứng dậy lại (còn ~5% độ đè)
 }
 
 export const defaultGrassParams: GrassParams = {
@@ -23,4 +27,7 @@ export const defaultGrassParams: GrassParams = {
 	terrainHeight: 10,
 	windStrength: 1.5,
 	windSpeed: 1,
+	trampleRadius: 1.6,
+	trampleBend: 1.3,
+	trampleRecovery: 2.5,
 }

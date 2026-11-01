@@ -16,7 +16,7 @@ Demo vẽ ba vật thể:
 | Mặt đất  | `ground.ts`, `shaders/ground.*` | Mặt phẳng 500 × 500 m, chia 512 × 512 ô, được nâng thành đồi trong vertex shader. |
 | Cỏ       | `grass.ts`, `shaders/grass.*`   | 131 072 lá cỏ instancing rải trên vùng 100 × 100 m.                               |
 
-`GrassScene` (`grass-scene.ts`) tạo cả ba và giữ các uniform dùng chung (`shared-uniforms.ts`). Uniform dùng chung quan trọng nhất là `terrainParams`: mặt đất và cỏ đọc cùng một hàm địa hình (`shaders/terrain.glsl`), nên gốc mỗi lá cỏ luôn nằm đúng trên mặt đất.
+`GrassScene` (`grass-scene.ts`) tạo cả ba và giữ các uniform dùng chung (`shared-uniforms.ts`). Uniform dùng chung quan trọng nhất là `terrainParams`: mặt đất và cỏ đọc cùng một hàm địa hình (`shaders/terrain.glsl`), nên gốc mỗi lá cỏ luôn nằm đúng trên mặt đất. Hàm này cũng có bản chạy trên CPU (`terrain.ts`), nên các vật thể three.js thường như quả bóng nhân vật cũng đặt được lên đồi (xem phần 8).
 
 ## 1. Lá cỏ không có dữ liệu đỉnh
 
@@ -85,7 +85,7 @@ P3 = (0, cos(lean), sin(lean))   ngọn, nghiêng theo góc lean
 
 Tính đường cong tại `heightPercent` ra độ cao và độ cong về phía trước của từng đỉnh. **Đạo hàm** của đường cong (`bezierGrad`) là hướng dọc theo lá. Xoay nó 90° ra pháp tuyến bề mặt, nên ánh sáng bám theo độ cong.
 
-**Xoay vào vị trí.** Hướng cuối cùng là `rotateAxis(gió) × rotateY(góc xoay)`, sau đó lá được dời tới vị trí của nó trên địa hình.
+**Xoay vào vị trí.** Hướng cuối cùng là `rotateAxis(bị đè) × rotateAxis(gió) × rotateY(góc xoay)`, sau đó lá được dời tới vị trí của nó trên địa hình. Phép xoay khi bị đè được giải thích ở phần 8.
 
 ## 4. Gió
 
@@ -119,6 +119,56 @@ Gió gồm hai lớp noise, chạy theo `windTime`. CPU cộng dồn giá trị 
 
 **Bầu trời.** Màu được tính theo **vị trí trên màn hình** (`gl_FragCoord / resolution`), không theo hướng nhìn. Đây là phông nền cách điệu, rẻ. Do đó bầu trời không đổi khi xoay camera, và uniform `resolution` phải được cập nhật mỗi khi đổi kích thước.
 
+## 8. Cỏ tương tác: ngả ra khi có vật đi qua
+
+Lá cỏ ngả ra xa khi nhân vật hoặc vật thể đi qua, rồi từ từ đứng dậy. Có ba phần làm việc này.
+
+### Trample map (`trample-map.ts`, `shaders/trample.frag`)
+
+Một texture half-float 256 × 256 trải lên vùng cỏ, mỗi texel khoảng 0,4 m. Mỗi texel lưu một vector 2D trong kênh đỏ và xanh lá:
+
+- **hướng:** cỏ ở chỗ đó bị đẩy về phía nào (trên mặt phẳng đất)
+- **độ dài:** bị đè mạnh cỡ nào, từ 0 (đứng thẳng) tới 1 (đè hết cỡ)
+
+Mỗi frame, một pass toàn màn hình nhỏ cập nhật nó: đọc texture của frame trước và ghi ra texture mới (hai texture thay phiên nhau):
+
+1. **Mờ dần:** vector cũ được nhân với `decay`. Cỏ bị đè từ từ đứng dậy.
+2. **In dấu:** với mỗi vật đè, các texel trong bán kính của nó bị đẩy ra xa tâm vật. Mạnh nhất trong nửa bán kính, nhạt dần về 0 ở mép.
+
+`decay = e^(−3·delta / recovery)`: sau `recovery` giây còn khoảng 5% độ đè. Nó chỉ phụ thuộc thời gian đã trôi qua, nên cỏ đứng dậy cùng tốc độ dù 30 hay 144 fps.
+
+### Uốn lá (`shaders/grass.vert`)
+
+Vertex shader đọc trample map một lần, tại gốc lá. Tức là một lần đọc texture mỗi đỉnh, dù có bao nhiêu vật thể. Từ vector đó nó lấy:
+
+- **độ đè** = độ dài vector
+- **hướng** = vector đã chuẩn hoá
+
+Sau đó nó thêm một phép xoay trước phép xoay của gió: quanh trục nằm ngang vuông góc với hướng đẩy, một góc `độ đè × trampleBend × heightPercent`. Giống gió, gốc đứng yên còn ngọn ngả nhiều nhất, nên lá cong xuống chứ không đổ thẳng như que.
+
+Cỏ đang bị đè cũng ít bị gió lay hơn (`windLean × (1 − độ đè)`). Nếu không thì cỏ nằm rạp vẫn phất phơ.
+
+Một chi tiết: hàm `rotateAxis` dựng ma trận theo thứ tự chuyển vị, nên thực tế nó xoay theo góc **âm**. Trục đè được đảo dấu để bù lại; trong shader có chú thích ngay cạnh.
+
+### Vật đè và nhân vật (`player.ts`, `player-input.ts`, `grass-scene.ts`)
+
+Bất cứ thứ gì có `position` và `trampleRadius` (interface `Interactor`) đều đè được cỏ. Đăng ký bằng `world.addInteractor(obj)`. Tối đa 8 cùng lúc (`MAX_INTERACTORS`).
+
+Vật đè của demo là `PlayerBall`, một quả bóng cam:
+
+- đi bằng **W A S D** / phím mũi tên theo hướng nhìn của camera (`moveDirection`), Shift để chạy
+- lăn không trượt
+- nằm trên mặt đất nhờ `GrassScene.heightAt(x, z)`
+- camera đi theo nó
+
+Bật **"Tự đi vòng tròn"** trên bảng điều khiển thì quả bóng tự đi vòng tròn khi không bấm phím.
+
+### Vì sao noise địa hình thay đổi
+
+Để đặt quả bóng lên đồi, CPU phải tính ra đúng độ cao như GPU. Noise gốc dùng hash dựa trên `sin()`, cho kết quả khác nhau giữa GLSL (float32, `sin` tuỳ GPU) và JavaScript.
+
+Hash điểm lưới trong `noise.glsl` giờ là `latticeGradient`, một hash số nguyên pcg3d. Phép nhân và XOR số nguyên cho kết quả giống hệt ở cả hai phía, nên `terrain.ts` tính lại địa hình lệch chưa tới một micromet. Vì vậy đồi (và kiểu gió, vốn dùng cùng noise) trông khác demo gốc. Ngẫu nhiên của từng lá vẫn dùng hash `sin` cũ, vì CPU không cần tới nó.
+
 ## Muốn thay đổi thì sửa ở đâu
 
 | Muốn đổi…                                     | Sửa                                                                            |
@@ -130,9 +180,15 @@ Gió gồm hai lớp noise, chạy theo `windTime`. CPU cộng dồn giá trị 
 | Màu và ánh sáng của lá                        | `shaders/grass.frag`, `textures/grass*.png`                                    |
 | Lối đi                                        | `textures/tileData.jpg` (trắng = lối đi)                                       |
 | Thêm vật thể mới                              | Tạo class giống `Sky`/`Ground` nhận `SharedUniforms`; thêm nó vào `GrassScene` |
+| Cỏ phản ứng thế nào khi bị đè                 | `trampleRadius` / `trampleBend` / `trampleRecovery` trong `params.ts`          |
+| Hình dạng vết đè (độ nhạt dần, hướng đẩy)     | `shaders/trample.frag`                                                         |
+| Cho vật thể khác đè cỏ                        | Cho nó `position` + `trampleRadius`, gọi `world.addInteractor(obj)`            |
+| Tốc độ nhân vật, vị trí camera, tự đi         | Các hằng số đầu file `grass-view.svelte`                                       |
 
 ## Giới hạn
 
 - **Chưa vô tận.** Cỏ là một vùng cố định quanh gốc toạ độ và mặt đất rộng 500 m. Muốn cánh đồng vô tận thật thì phải đặt lá cỏ theo lưới trong không gian thế giới quanh camera, để lá đứng yên khi camera di chuyển. Mặt đất cũng phải đi theo camera.
 - **Mật độ cố định.** Nhiều lá hơn hoặc vùng nhỏ hơn thì cỏ dày hơn. Không có level of detail: lá ở xa tốn chi phí như lá ở gần.
 - **Một nguồn sáng.** Hướng và màu ánh sáng là hằng số trong `grass.frag`.
+- **Chỉ đè được trong vùng cỏ.** Trample map đặt tâm ở vùng cỏ, nên với cánh đồng vô tận nó cũng phải đi theo camera cùng với cỏ.
+- **Bỏ qua độ cao của vật đè.** Chỉ in dấu theo x và z, nên vật bay phía trên cỏ vẫn làm cỏ rạp. Tối đa 8 vật đè cùng lúc.

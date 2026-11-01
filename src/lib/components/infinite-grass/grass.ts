@@ -2,6 +2,7 @@ import * as THREE from 'three'
 import { createGrassGeometry, setGrassBounds } from './grass-geometry'
 import type { GrassParams } from './params'
 import type { SharedUniforms } from './shared-uniforms'
+import type { TrampleMap } from './trample-map'
 import common from './shaders/common.glsl?raw'
 import noise from './shaders/noise.glsl?raw'
 import terrain from './shaders/terrain.glsl?raw'
@@ -21,10 +22,16 @@ export class Grass {
 		windParams: { value: new THREE.Vector2() }, // x = độ nghiêng, y = thời gian gió
 	}
 
-	constructor(shared: SharedUniforms, textures: GrassTextureSet, params: GrassParams) {
+	constructor(
+		shared: SharedUniforms,
+		trample: TrampleMap,
+		textures: GrassTextureSet,
+		params: GrassParams
+	) {
 		const material = new THREE.ShaderMaterial({
 			uniforms: {
 				...this.#u,
+				...trample.uniforms,
 				terrainParams: shared.terrainParams,
 				tileDataTexture: { value: textures.tileData },
 				grassDiffuse: { value: textures.bladeDiffuse },

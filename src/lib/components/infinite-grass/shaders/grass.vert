@@ -7,6 +7,8 @@
 uniform vec4 grassParams; // x = segments, y = nửa cạnh vùng cỏ, z = rộng lá, w = cao lá
 uniform vec2 windParams;  // x = độ nghiêng do gió, y = thời gian gió (đã nhân tốc độ)
 uniform sampler2D tileDataTexture;
+uniform sampler2D trampleMap;
+uniform vec4 trampleParams; // xy = tâm vùng (x, z), z = nửa cạnh vùng, w = góc đè tối đa (rad)
 
 varying vec4 vGrassData; // x, heightPercent, xSide, grassType
 varying vec3 vNormal;
@@ -58,6 +60,13 @@ vec3 bezierGrad(vec3 P0, vec3 P1, vec3 P2, vec3 P3, float t) {
   return 3.0 * (1.0 - t) * (1.0 - t) * (P1 - P0) +
          6.0 * (1.0 - t) * t * (P2 - P1) +
          3.0 * t * t * (P3 - P2);
+}
+
+// Vector đè cỏ tại gốc lá (trample.frag): hướng đẩy × độ đè. Ngoài vùng map thì không đè.
+vec2 trampleAt(vec2 xz) {
+  vec2 uv = (xz - trampleParams.xy) / trampleParams.z * 0.5 + 0.5;
+  if (any(lessThan(uv, vec2(0.0))) || any(greaterThan(uv, vec2(1.0)))) return vec2(0.0);
+  return texture2D(trampleMap, uv).rg;
 }
 
 const float PI = 3.14159;
@@ -113,6 +122,17 @@ void main() {
       vec3(grassBladeWorldPos.xz, windTime * 4.0)) * (windStrength * 0.5 + 0.125);
   float leanFactor = remap(hashVal.y, -1.0, 1.0, -0.5, 0.5) + randomLeanAnimation;
 
+  // ---------- Bị đè (nhân vật / vật thể đi qua) ----------
+  vec2 trample = trampleAt(grassBladeWorldPos.xz);
+  float trampleAmount = saturate(length(trample));
+  vec2 trampleDir = trample / max(length(trample), 1e-4);
+  // cỏ đang bị đè thì gió lay ít đi
+  windLeanAngle *= 1.0 - trampleAmount;
+  // rotateAxis xoay theo chiều âm (ma trận là chuyển vị của ma trận quay chuẩn),
+  // nên trục này làm ngọn lá ngả theo trampleDir, tức là ra xa vật đè
+  vec3 trampleAxis = vec3(-trampleDir.y, 0.0, trampleDir.x);
+  float trampleAngle = trampleAmount * trampleParams.w * heightPercent;
+
   // ---------- Uốn lá theo đường cong bezier ----------
   vec3 p1 = vec3(0.0);
   vec3 p2 = vec3(0.0, 0.33, 0.0);
@@ -126,7 +146,8 @@ void main() {
   float y = curve.y * height;
   float z = curve.z * height;
 
-  mat3 grassMat = rotateAxis(windAxis, windLeanAngle) * rotateY(angle);
+  mat3 grassMat = rotateAxis(trampleAxis, trampleAngle) *
+                  rotateAxis(windAxis, windLeanAngle) * rotateY(angle);
 
   vec3 grassLocalPosition = grassMat * vec3(x, y, z) + grassOffset;
   vec3 grassLocalNormal = grassMat * vec3(0.0, curveRot90 * curveGrad.yz);
