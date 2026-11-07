@@ -130,6 +130,7 @@
 				{ label: 'Streaming Terrain', href: '/games/streaming-terrain' },
 				{ label: 'Underwater', href: '/games/underwater' },
 				{ label: 'Titan', href: '/games/titan' },
+				{ label: 'Hotel Tour', href: '/games/hotel-tour' },
 			],
 		},
 		{

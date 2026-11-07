@@ -70,6 +70,11 @@ const routes = [
 		description: 'Titan page',
 	},
 	{
+		path: '/games/hotel-tour',
+		title: 'Svelte Physics',
+		description: 'Hotel Tour page',
+	},
+	{
 		path: '/jolt-physics/example',
 		title: 'Svelte Physics',
 		description: 'Jolt Physics - Example page',

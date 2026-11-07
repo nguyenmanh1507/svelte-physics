@@ -9,6 +9,12 @@ import compositeFrag from './shaders/composite.frag?raw'
 
 const WIND_DIR = new THREE.Vector3(1, 0, 0.35).normalize()
 
+export interface CloudRendererOptions {
+	// Thay mặt đất xanh bằng biển (phía -Z) + bãi cát + đất liền (phía +Z).
+	// shoreZ: toạ độ Z trung bình của mép nước (mét).
+	ocean?: { shoreZ?: number }
+}
+
 // Hai pass mỗi frame:
 //   1. ray march mây vào render target độ phân giải thấp (renderScale)
 //   2. composite bầu trời full-res + mây đã upscale + tonemap ra màn hình
@@ -19,6 +25,7 @@ export class CloudRenderer {
 	#size = new THREE.Vector2(1, 1)
 	#sunDir = new THREE.Vector3()
 	#wind = new THREE.Vector3() // độ dời tích luỹ của gió
+	#time = { value: 0 } // giây, cho sóng biển
 	#cloudRT = new THREE.WebGLRenderTarget(1, 1, {
 		depthBuffer: false,
 		type: THREE.HalfFloatType,
@@ -33,7 +40,8 @@ export class CloudRenderer {
 		renderer: THREE.WebGLRenderer,
 		camera: THREE.PerspectiveCamera,
 		noise: NoiseTextures,
-		params: Partial<CloudParams> = {}
+		params: Partial<CloudParams> = {},
+		options: CloudRendererOptions = {}
 	) {
 		this.#renderer = renderer
 		// camera được tham chiếu trực tiếp: uniform luôn bám theo khi camera đổi
@@ -61,9 +69,12 @@ export class CloudRenderer {
 			uUsePowder: { value: true },
 			uHorizon: { value: true },
 		})
-		this.#compositePass = new FullscreenPass(common + sky + compositeFrag, {
+		const defines = options.ocean ? '#define OCEAN\n' : ''
+		this.#compositePass = new FullscreenPass(defines + common + sky + compositeFrag, {
 			...view,
 			uClouds: { value: this.#cloudRT.texture },
+			uTime: this.#time,
+			uShoreZ: { value: options.ocean?.shoreZ ?? -40 },
 		})
 		this.setParams(params)
 	}
@@ -98,6 +109,7 @@ export class CloudRenderer {
 
 	render(delta: number) {
 		this.#wind.addScaledVector(WIND_DIR, this.#params.windSpeed * delta)
+		this.#time.value += delta
 		this.#cloudPass.render(this.#renderer, this.#cloudRT)
 		this.#compositePass.render(this.#renderer, null)
 	}
