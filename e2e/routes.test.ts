@@ -65,6 +65,11 @@ const routes = [
 		description: 'Underwater page',
 	},
 	{
+		path: '/games/titan',
+		title: 'Svelte Physics',
+		description: 'Titan page',
+	},
+	{
 		path: '/jolt-physics/example',
 		title: 'Svelte Physics',
 		description: 'Jolt Physics - Example page',

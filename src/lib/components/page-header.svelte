@@ -129,6 +129,7 @@
 				{ label: 'Lighthouse Isle', href: '/games/lighthouse-isle' },
 				{ label: 'Streaming Terrain', href: '/games/streaming-terrain' },
 				{ label: 'Underwater', href: '/games/underwater' },
+				{ label: 'Titan', href: '/games/titan' },
 			],
 		},
 		{
