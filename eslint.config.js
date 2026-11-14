@@ -13,6 +13,8 @@ const gitignorePath = fileURLToPath(new URL('./.gitignore', import.meta.url))
 
 export default defineConfig(
 	includeIgnoreFile(gitignorePath),
+	// mã Minamo được port gần như nguyên bản (xem src/lib/components/underwater/LICENSES.md)
+	{ ignores: ['src/lib/components/underwater/water/**'] },
 	js.configs.recommended,
 	...ts.configs.recommended,
 	...svelte.configs.recommended,

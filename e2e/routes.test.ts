@@ -60,6 +60,11 @@ const routes = [
 		description: 'Streaming Terrain page',
 	},
 	{
+		path: '/games/underwater',
+		title: 'Svelte Physics',
+		description: 'Underwater page',
+	},
+	{
 		path: '/jolt-physics/example',
 		title: 'Svelte Physics',
 		description: 'Jolt Physics - Example page',
