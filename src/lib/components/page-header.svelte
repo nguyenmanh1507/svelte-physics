@@ -132,6 +132,7 @@
 				{ label: 'Titan', href: '/games/titan' },
 				{ label: 'Hotel Tour', href: '/games/hotel-tour' },
 				{ label: 'Little Pond', href: '/games/little-pond' },
+				{ label: 'Arcade Flight (Su-57)', href: '/games/arcade-flight' },
 			],
 		},
 		{

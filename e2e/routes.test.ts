@@ -80,6 +80,11 @@ const routes = [
 		description: 'Little Pond page',
 	},
 	{
+		path: '/games/arcade-flight',
+		title: 'Svelte Physics',
+		description: 'Arcade Flight (Su-57) page',
+	},
+	{
 		path: '/jolt-physics/example',
 		title: 'Svelte Physics',
 		description: 'Jolt Physics - Example page',
