@@ -17,9 +17,11 @@
 		type FlightApp,
 		type FlightAppHud,
 	} from './components/flight-app'
+	import FlightMinimap from './components/flight-minimap.svelte'
 
 	// trang chỉ chạy phía client (ssr = false) nên đọc được matchMedia ngay
 	const touch = matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window
+	const narrow = matchMedia('(max-width: 640px)').matches
 
 	let app = $state.raw<FlightApp | null>(null)
 	let hud = $state.raw<FlightAppHud | null>(null)
@@ -27,6 +29,7 @@
 	let config = $state.raw<AircraftConfig | null>(null)
 	let panel = $state<'help' | 'cfg' | null>(null)
 	let started = $state(false)
+	let showMap = $state(true)
 	let failure = $state('')
 
 	const mountApp: Attachment<HTMLElement> = (host) => {
@@ -85,6 +88,7 @@
 		if (i >= 0) selectAircraft(AIRCRAFT[i].key)
 		else if (e.code === 'KeyH') togglePanel('help')
 		else if (e.code === 'KeyP') togglePanel('cfg')
+		else if (e.code === 'KeyN') showMap = !showMap
 	}
 </script>
 
@@ -123,6 +127,13 @@
 				>
 				<button
 					type="button"
+					class:on={showMap}
+					onclick={() => (showMap = !showMap)}
+					aria-pressed={showMap}
+					aria-keyshortcuts="N">N · Bản đồ</button
+				>
+				<button
+					type="button"
 					class:on={panel === 'help'}
 					onclick={() => togglePanel('help')}
 					aria-expanded={panel === 'help'}
@@ -138,13 +149,22 @@
 				>
 			</div>
 
+			<!-- bảng bên phải che chỗ của mini map nên ẩn tạm khi đang mở -->
+			{#if showMap && app && !panel}
+				<div class="minimap-slot">
+					<FlightMinimap source={app.minimap} size={narrow ? 128 : 200} />
+				</div>
+			{/if}
+
 			{#if panel === 'help'}
 				<aside class="side" aria-label="Bảng phím">
 					<FlightHelp>
 						{#snippet extra()}
 							<tr>
 								<td><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd></td>
-								<td>Chọn máy bay · <kbd>H</kbd> bảng phím · <kbd>P</kbd> config</td>
+								<td>
+									Chọn máy bay · <kbd>N</kbd> mini map · <kbd>H</kbd> bảng phím · <kbd>P</kbd> config
+								</td>
 							</tr>
 						{/snippet}
 					</FlightHelp>
@@ -182,7 +202,7 @@
 							</p>
 						{/if}
 						<button type="button" class="go" disabled={!app} onclick={start}>
-							{app ? 'Bắt đầu bay' : 'Đang nạp Su-57…'}
+							{app ? 'Bắt đầu bay' : 'Đang nạp model…'}
 						</button>
 					</div>
 				</div>
@@ -250,6 +270,13 @@
 		border-color: #7dffb0;
 		color: #fff;
 	}
+	.minimap-slot {
+		position: absolute;
+		right: 14px;
+		top: 56px;
+		z-index: 4;
+		pointer-events: none;
+	}
 	.side {
 		position: absolute;
 		right: 14px;
@@ -307,6 +334,13 @@
 		border-color: #7dffb0;
 	}
 	@media (max-width: 640px) {
+		/* cột nút bên phải cao, đặt bản đồ giữa mép trên */
+		.minimap-slot {
+			right: auto;
+			left: 50%;
+			top: 8px;
+			transform: translateX(-50%);
+		}
 		.top-right {
 			right: 8px;
 			top: 8px;

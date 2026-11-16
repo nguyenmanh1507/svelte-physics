@@ -1,4 +1,4 @@
-// Model dựng bằng primitive (mũi −Z) cho 2 config còn lại của prototype.
+// Model dựng bằng primitive (mũi −Z) cho máy bay biểu diễn của prototype.
 import * as THREE from 'three'
 
 import type { AircraftFrame, AircraftRig } from '../three/aircraft-rig'
@@ -62,52 +62,6 @@ export function buildAerobaticRig(): AircraftRig {
 		camH: 3.4,
 		shadowSize: 6,
 		animate: propAnimator([prop]),
-		dispose: () => disposeObject(g),
-	}
-}
-
-export function buildTransportRig(): AircraftRig {
-	const g = new THREE.Group()
-	const grey = mat('#8d9a86')
-	const dark = mat('#4b5547')
-	const fus = mesh(new THREE.CylinderGeometry(2.2, 2.2, 24, 12), grey)
-	fus.rotation.x = Math.PI / 2
-	g.add(fus)
-	const nose = mesh(
-		new THREE.SphereGeometry(2.2, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2),
-		grey,
-		0,
-		0,
-		-12
-	)
-	nose.rotation.x = -Math.PI / 2
-	nose.scale.y = 1.4
-	g.add(nose)
-	const tail = mesh(new THREE.ConeGeometry(2.2, 8, 12), grey, 0, 0.8, 16)
-	tail.rotation.x = Math.PI / 2
-	g.add(tail)
-	g.add(mesh(new THREE.BoxGeometry(40, 0.5, 4.2), grey, 0, 2.2, -2))
-	g.add(mesh(new THREE.BoxGeometry(14, 0.3, 3), grey, 0, 1.6, 18))
-	g.add(mesh(new THREE.BoxGeometry(0.4, 7, 4.5), grey, 0, 5, 18))
-	const props: THREE.Object3D[] = []
-	for (const x of [-14, -7, 7, 14]) {
-		const pod = mesh(new THREE.CylinderGeometry(0.8, 0.7, 5, 10), dark, x, 1.6, -3.2)
-		pod.rotation.x = Math.PI / 2
-		g.add(pod)
-		const pr = new THREE.Group()
-		pr.position.set(x, 1.6, -6)
-		pr.add(mesh(new THREE.BoxGeometry(4.2, 0.25, 0.06), dark))
-		pr.add(mesh(new THREE.BoxGeometry(0.25, 4.2, 0.06), dark))
-		g.add(pr)
-		props.push(pr)
-	}
-	return {
-		object: g,
-		span: 20,
-		camDist: 80,
-		camH: 18,
-		shadowSize: 36,
-		animate: propAnimator(props),
 		dispose: () => disposeObject(g),
 	}
 }

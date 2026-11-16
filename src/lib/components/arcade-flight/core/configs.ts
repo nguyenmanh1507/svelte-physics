@@ -5,42 +5,48 @@ export type AircraftKey = 'fighter' | 'aerobatic' | 'transport'
 /** 3 config mẫu; cùng một flight model, chỉ khác số liệu */
 export const CONFIGS: Record<AircraftKey, AircraftConfig> = {
 	transport: {
-		id: 'transport_heavy',
-		name: 'Vận tải (C-130 style)',
+		// số liệu gần 777-300ER (MTOW ~350 t, 2×GE90-115B, T/W ~0,3), tốc độ quy về độ cao thấp
+		id: 'transport_b777',
+		name: 'Vận tải (Boeing 777 style)',
 		class: 'transport',
-		massKg: 70000,
-		speed: { stall: 55, min: 60, cruise: 150, max: 175 },
-		cruiseThrottle: 0.75,
+		massKg: 250000,
+		speed: { stall: 62, min: 68, cruise: 200, max: 255 },
+		cruiseThrottle: 0.65,
 		thrustToWeight: 0.3,
-		throttleRate: 0.25,
+		// turbofan cánh quạt lớn spool chậm (~4 s từ idle lên TOGA)
+		throttleRate: 0.22,
 		rates: {
 			pitch: [
-				[50, 4],
-				[90, 8],
-				[150, 9],
-				[175, 7],
+				[62, 3],
+				[110, 5.5],
+				[200, 6],
+				[255, 5],
 			],
 			roll: [
-				[50, 10],
-				[100, 25],
-				[175, 20],
+				[62, 8],
+				[130, 16],
+				[255, 13],
 			],
 			yaw: [
-				[50, 3],
-				[175, 5],
+				[62, 2],
+				[255, 3],
 			],
 		},
-		angularAccel: { pitch: 12, roll: 25, yaw: 6 },
+		angularAccel: { pitch: 8, roll: 18, yaw: 4 },
+		// FAR 25: +2,5 g / −1 g
 		gLimit: { pos: 2.5, neg: 1.0 },
-		aoa: { critical: 14, limiter: 12, softZone: 3 },
-		inducedDrag: 0.25,
-		bodyDrag: 10,
-		airbrakeDrag: 1.5,
+		// envelope protection giữ AoA dưới ngưỡng stall có slat
+		aoa: { critical: 15, limiter: 12, softZone: 3 },
+		// cánh sải lớn, tỉ số dạng cao → cản cảm ứng thấp
+		inducedDrag: 0.18,
+		bodyDrag: 9,
+		airbrakeDrag: 1.2,
 		sideslipGrip: 2.5,
-		stability: 2.0,
+		stability: 2.5,
 		thrustVectoring: false,
-		assist: { autoLevel: 0.8, autoRollFromYaw: 0.3, maxBankStandard: 30, autoTrim: 1 },
-		input: { deadzone: 0.15, expo: 0.5, smoothingTime: 0.2 },
+		// fly-by-wire 777: tự cân bằng, bank angle protection ~35°
+		assist: { autoLevel: 0.8, autoRollFromYaw: 0.35, maxBankStandard: 35, autoTrim: 1 },
+		input: { deadzone: 0.15, expo: 0.5, smoothingTime: 0.25 },
 		maneuvers: {},
 	},
 	aerobatic: {
