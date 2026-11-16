@@ -5,10 +5,10 @@ import {
 	ArcadeFlightController,
 	CONFIGS,
 	ReticleOverlay,
-	buildAerobaticRig,
 	cloneConfig,
 	loadB777Rig,
 	loadSu57Rig,
+	loadYak130Rig,
 	type AircraftConfig,
 	type AircraftKey,
 	type AircraftRig,
@@ -20,7 +20,7 @@ import { FlightTrail, type MinimapData } from './minimap'
 
 export const AIRCRAFT: { key: AircraftKey; label: string }[] = [
 	{ key: 'fighter', label: 'Su-57' },
-	{ key: 'aerobatic', label: 'Biểu diễn' },
+	{ key: 'aerobatic', label: 'Yak-130' },
 	{ key: 'transport', label: 'Boeing 777' },
 ]
 
@@ -44,8 +44,8 @@ export async function createFlightApp(host: HTMLElement, { touch, onHud }: Fligh
 	host.appendChild(canvas)
 
 	const world = createFlightWorld(renderer)
-	// nạp song song; lỗi một model thì giải phóng model kia trước khi ném lỗi
-	const loaded = await Promise.allSettled([loadSu57Rig(), loadB777Rig()])
+	// nạp song song; lỗi một model thì giải phóng các model còn lại trước khi ném lỗi
+	const loaded = await Promise.allSettled([loadSu57Rig(), loadYak130Rig(), loadB777Rig()])
 	const failed = loaded.find((r) => r.status === 'rejected')
 	if (failed) {
 		for (const r of loaded) if (r.status === 'fulfilled') r.value.dispose?.()
@@ -54,7 +54,7 @@ export async function createFlightApp(host: HTMLElement, { touch, onHud }: Fligh
 		canvas.remove()
 		throw failed.reason
 	}
-	const [su57, b777] = loaded.map((r) => (r as PromiseFulfilledResult<AircraftRig>).value)
+	const [su57, yak130, b777] = loaded.map((r) => (r as PromiseFulfilledResult<AircraftRig>).value)
 
 	const camera = new THREE.PerspectiveCamera(62, 1, 0.5, 40000)
 	const configs: Record<AircraftKey, AircraftConfig> = {
@@ -64,7 +64,7 @@ export async function createFlightApp(host: HTMLElement, { touch, onHud }: Fligh
 	}
 	const rigs: Record<AircraftKey, AircraftRig> = {
 		fighter: su57,
-		aerobatic: buildAerobaticRig(),
+		aerobatic: yak130,
 		transport: b777,
 	}
 	let aircraft: AircraftKey = 'fighter'
