@@ -131,6 +131,7 @@
 				{ label: 'Underwater', href: '/games/underwater' },
 				{ label: 'Titan', href: '/games/titan' },
 				{ label: 'Hotel Tour', href: '/games/hotel-tour' },
+				{ label: 'Little Pond', href: '/games/little-pond' },
 			],
 		},
 		{

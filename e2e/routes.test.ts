@@ -75,6 +75,11 @@ const routes = [
 		description: 'Hotel Tour page',
 	},
 	{
+		path: '/games/little-pond',
+		title: 'Ao Sen Nhỏ',
+		description: 'Little Pond page',
+	},
+	{
 		path: '/jolt-physics/example',
 		title: 'Svelte Physics',
 		description: 'Jolt Physics - Example page',
