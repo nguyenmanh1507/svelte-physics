@@ -1,22 +1,19 @@
 // Su-57 (GLB, Draco + WebP) → AircraftRig với bề mặt điều khiển, vòi TVC và lửa đuôi chuyển động.
-import * as THREE from 'three'
-import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js'
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
-
 import { R2D, clamp, clamp01 } from '../core'
 import type { AircraftFrame, AircraftRig } from '../three/aircraft-rig'
 import { disposeObject } from '../three/dispose'
 import { createFlame, updateFlame } from './afterburner'
+import {
+	DRACO_PATH,
+	applySurfaces,
+	createSurface,
+	driveSurface,
+	loadGltfModel,
+	type GltfRigOptions,
+} from './gltf-rig'
 
 export const SU57_URL = '/3d-models/su-57/Su57E_web.glb'
-// decoder WASM chép từ three/examples/jsm/libs vào static/libs (cùng phiên bản three)
-const DRACO_PATH = '/libs/draco/'
 
-/** Bề mặt quay quanh một trục cục bộ của node, chồng lên hướng gốc trong GLB */
-type Surface = { node: THREE.Object3D; base: THREE.Quaternion; axis: THREE.Vector3; angle: number }
-
-const AXIS_X = new THREE.Vector3(1, 0, 0)
-const AXIS_Y = new THREE.Vector3(0, 1, 0)
 // càng đáp và cửa khoang: máy bay luôn ở trên không nên ẩn đi
 const GEAR_NODES = [
 	'NoseGear',
@@ -28,55 +25,29 @@ const GEAR_NODES = [
 	'MainDoor_R',
 ]
 
-export type Su57Options = { url?: string; dracoPath?: string }
-
 export async function loadSu57Rig({
 	url = SU57_URL,
 	dracoPath = DRACO_PATH,
-}: Su57Options = {}): Promise<AircraftRig> {
-	const draco = new DRACOLoader().setDecoderPath(dracoPath)
-	const loader = new GLTFLoader().setDRACOLoader(draco)
-	let gltf
-	try {
-		gltf = await loader.loadAsync(url)
-	} finally {
-		draco.dispose()
-	}
-
-	// GLB dựng mũi hướng +Z, cánh trái +X → xoay 180° quanh Y cho đúng quy ước mũi −Z
-	const model = gltf.scene
-	model.rotation.y = Math.PI
-	const root = new THREE.Group()
-	root.name = 'Su57Rig'
-	root.add(model)
-
-	const node = (name: string) => {
-		const n = model.getObjectByName(name)
-		if (!n) throw new Error(`Su-57: thiếu node ${name}`)
-		return n
-	}
+}: GltfRigOptions = {}): Promise<AircraftRig> {
+	const { root, node } = await loadGltfModel(url, 'Su57', dracoPath)
 	for (const name of GEAR_NODES) node(name).visible = false
 
-	const surface = (name: string, axis: THREE.Vector3): Surface => {
-		const n = node(name)
-		return { node: n, base: n.quaternion.clone(), axis, angle: 0 }
-	}
-	// góc dương quanh X cục bộ = mép sau đi lên (mép trước đi xuống); quanh Y = mép sau sang phải máy bay
+	const surface = (name: string, axis: 'x' | 'y') => createSurface(node(name), axis)
 	const s = {
-		aileronL: surface('Aileron_L', AXIS_X),
-		aileronR: surface('Aileron_R', AXIS_X),
-		flaperonL: surface('Flaperon_L', AXIS_X),
-		flaperonR: surface('Flaperon_R', AXIS_X),
-		stabL: surface('Stab_L', AXIS_X),
-		stabR: surface('Stab_R', AXIS_X),
-		finL: surface('Fin_L', AXIS_Y),
-		finR: surface('Fin_R', AXIS_Y),
-		levconL: surface('LEVCON_L', AXIS_X),
-		levconR: surface('LEVCON_R', AXIS_X),
-		lefL: surface('LEFlap_L', AXIS_X),
-		lefR: surface('LEFlap_R', AXIS_X),
-		nozzleL: surface('Nozzle_L', AXIS_X),
-		nozzleR: surface('Nozzle_R', AXIS_X),
+		aileronL: surface('Aileron_L', 'x'),
+		aileronR: surface('Aileron_R', 'x'),
+		flaperonL: surface('Flaperon_L', 'x'),
+		flaperonR: surface('Flaperon_R', 'x'),
+		stabL: surface('Stab_L', 'x'),
+		stabR: surface('Stab_R', 'x'),
+		finL: surface('Fin_L', 'y'),
+		finR: surface('Fin_R', 'y'),
+		levconL: surface('LEVCON_L', 'x'),
+		levconR: surface('LEVCON_R', 'x'),
+		lefL: surface('LEFlap_L', 'x'),
+		lefR: surface('LEFlap_R', 'x'),
+		nozzleL: surface('Nozzle_L', 'x'),
+		nozzleR: surface('Nozzle_R', 'x'),
 	}
 	const all = Object.values(s)
 
@@ -88,14 +59,10 @@ export async function loadSu57Rig({
 		return f
 	})
 
-	const q = new THREE.Quaternion()
-	const set = (sf: Surface, target: number, k: number) => {
-		sf.angle += (target - sf.angle) * k
-	}
-
 	function animate({ state, cmd, dt }: AircraftFrame) {
 		// cơ cấu chấp hành có quán tính: bám lệnh theo hằng số thời gian ~80 ms
 		const k = 1 - Math.exp(-dt / 0.08)
+		const set = (sf: (typeof all)[number], target: number) => driveSurface(sf, target, k)
 		const roll = cmd.roll
 		const pitch = cmd.pitch
 		const yaw = cmd.yaw
@@ -104,26 +71,25 @@ export async function loadSu57Rig({
 		// TVC theo tốc độ quay thực (cobra/kulbit dùng rate override chứ không qua stick)
 		const tvcPitch = clamp(-state.angVel.x / 1.5, -1, 1)
 
-		set(s.aileronL, -roll * 0.35 + brake * 0.35, k)
-		set(s.aileronR, roll * 0.35 + brake * 0.35, k)
-		set(s.flaperonL, -roll * 0.2 - brake * 0.35, k)
-		set(s.flaperonR, roll * 0.2 - brake * 0.35, k)
-		set(s.stabL, pitch * 0.3 - roll * 0.12, k)
-		set(s.stabR, pitch * 0.3 + roll * 0.12, k)
+		set(s.aileronL, -roll * 0.35 + brake * 0.35)
+		set(s.aileronR, roll * 0.35 + brake * 0.35)
+		set(s.flaperonL, -roll * 0.2 - brake * 0.35)
+		set(s.flaperonR, roll * 0.2 - brake * 0.35)
+		set(s.stabL, pitch * 0.3 - roll * 0.12)
+		set(s.stabR, pitch * 0.3 + roll * 0.12)
 		// phanh khí kiểu Su-57: hai bánh lái đứng xoè ra ngoài
-		set(s.finL, yaw * 0.3 - brake * 0.5, k)
-		set(s.finR, yaw * 0.3 + brake * 0.5, k)
+		set(s.finL, yaw * 0.3 - brake * 0.5)
+		set(s.finR, yaw * 0.3 + brake * 0.5)
 		const levcon = clamp01(aoaDeg / 25) * 0.3
-		set(s.levconL, levcon, k)
-		set(s.levconR, levcon, k)
+		set(s.levconL, levcon)
+		set(s.levconR, levcon)
 		const lef = clamp01(aoaDeg / 20) * 0.35
-		set(s.lefL, lef, k)
-		set(s.lefR, lef, k)
-		set(s.nozzleL, tvcPitch * 0.26 - roll * 0.1, k)
-		set(s.nozzleR, tvcPitch * 0.26 + roll * 0.1, k)
+		set(s.lefL, lef)
+		set(s.lefR, lef)
+		set(s.nozzleL, tvcPitch * 0.26 - roll * 0.1)
+		set(s.nozzleR, tvcPitch * 0.26 + roll * 0.1)
 
-		for (const sf of all)
-			sf.node.quaternion.copy(sf.base).multiply(q.setFromAxisAngle(sf.axis, sf.angle))
+		applySurfaces(all)
 		for (const f of flames) updateFlame(f, state.throttle, state.ab)
 	}
 

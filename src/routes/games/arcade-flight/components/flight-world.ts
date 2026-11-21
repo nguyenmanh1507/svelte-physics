@@ -163,7 +163,10 @@ export function createFlightWorld(renderer: THREE.WebGLRenderer) {
 		scene,
 		terrain,
 		spawn: course.spawn,
+		course,
 		ringCount: course.rings.length,
+		/** trạng thái đã qua của từng vòng (chỉ đọc, cho mini map) */
+		passed: passed as readonly boolean[],
 		/** kiểm tra vòng bay qua tại vị trí máy bay; trả về số vòng đã qua */
 		updateRings(p: THREE.Vector3) {
 			for (const i of passRings(course.rings, passed, p)) setRing(i, RING_PASSED)

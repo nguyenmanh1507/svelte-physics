@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
 import { CONFIGS, cloneConfig } from './configs'
-import { createState, stepFlight } from './flight-model'
+import { bankAngle, createState, stepFlight } from './flight-model'
 import { InputBuffer, type InputEvent } from './input'
-import { v3 } from './math'
-import { BOOST_BRAKE_CHORD, PilotController, type RawInput } from './pilot'
+import { D2R, FWD, qRotate, v3 } from './math'
+import { BOOST_BRAKE_CHORD, MODES, PilotController, type PilotMode, type RawInput } from './pilot'
 import type { AircraftConfig, FlightState } from './types'
 
 const DT = 1 / 120
@@ -148,5 +148,53 @@ describe('PilotController maneuvers', () => {
 		simulate(c, s, pilot, 0.5, () => ({ pitch: -1 }), 0.5)
 		expect(pilot.ms.phase).not.toBe('active')
 		expect(pilot.msg?.text).toBe('ABORT')
+	})
+})
+
+describe('PilotController loops', () => {
+	/** giữ cần pitch, cộng dồn góc quay quanh trục pitch/roll của thân (độ) đến khi đủ 1 vòng */
+	function holdPitch(mode: PilotMode, pitch: number, seconds = 25) {
+		const c = CONFIGS.fighter
+		const s = createState(c, v3(0, 5000, 0), 0)
+		const pilot = new PilotController(c)
+		pilot.mode = mode
+		// mouse-aim: chuột không động, điểm ngắm đứng yên ở hướng ban đầu
+		const aimDir = mode === 'mouse' ? qRotate(s.rot, FWD) : null
+		let pitched = 0
+		let rolled = 0
+		simulate(c, s, pilot, seconds, () => {
+			pitched += (-s.angVel.x * DT * 180) / Math.PI
+			rolled += (s.angVel.z * DT * 180) / Math.PI
+			return Math.abs(pitched) >= 360 ? {} : { pitch, aimDir }
+		})
+		return { pitched, rolled, s, pilot, c }
+	}
+
+	for (const mode of MODES) {
+		it(`${mode}: holding S flies a full inside loop without rolling`, () => {
+			const { pitched, rolled } = holdPitch(mode, 1)
+			expect(pitched).toBeGreaterThanOrEqual(360)
+			expect(Math.abs(rolled)).toBeLessThan(15)
+		})
+
+		it(`${mode}: holding W keeps pushing over the vertical without rolling`, () => {
+			const { pitched, rolled } = holdPitch(mode, -1)
+			expect(pitched).toBeLessThan(-120)
+			expect(Math.abs(rolled)).toBeLessThan(15)
+		})
+	}
+
+	it('standard: releasing the stick upside down rolls the wings level again', () => {
+		const c = CONFIGS.fighter
+		const s = createState(c, v3(0, 5000, 0), 0)
+		const pilot = new PilotController(c)
+		pilot.mode = 'standard'
+		let pitched = 0
+		// kéo tới đỉnh vòng (bụng lên trời) rồi buông cần
+		simulate(c, s, pilot, 25, () => {
+			pitched += (-s.angVel.x * DT * 180) / Math.PI
+			return pitched < 180 ? { pitch: 1 } : {}
+		})
+		expect(Math.abs(bankAngle(s.rot))).toBeLessThan(10 * D2R)
 	})
 })
