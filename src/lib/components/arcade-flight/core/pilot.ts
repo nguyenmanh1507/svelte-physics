@@ -82,9 +82,12 @@ export class PilotController {
 		this.msg = { text, until: now + 2.2, kind }
 	}
 
-	/** khi đang maneuver, vòng ngắm bám theo mũi thay vì chuột */
+	/** mouse-aim đang bị bàn phím ghi đè (cập nhật mỗi bước update) */
+	manualOverride = false
+
+	/** khi đang maneuver hoặc lái tay bằng phím, vòng ngắm bám theo mũi thay vì chuột */
 	get aimFollowPlane() {
-		return this.ms.phase !== 'idle'
+		return this.ms.phase !== 'idle' || this.manualOverride
 	}
 
 	start(id: StartableManeuverId, x: ManeuverContext, extra: Partial<ManeuverContext> = {}) {
@@ -125,21 +128,31 @@ export class PilotController {
 		let roll = sr
 		let yaw = sy
 		const bank = bankAngle(s.rot)
+		this.manualOverride = false
 		if (this.mode === 'mouse' && raw.aimDir) {
-			const a = this.ap.update(raw.aimDir, s, c, dt)
-			// bàn phím ghi đè autopilot
-			pitch = Math.abs(sp) > 0.25 ? sp : a.pitch
-			roll = Math.abs(sr) > 0.25 ? sr : a.roll
-			yaw = Math.abs(sy) > 0.25 ? sy : a.yaw
+			// W/S hoặc A/D ghi đè: lái tay cả pitch lẫn roll, vòng ngắm bám mũi (xem aimFollowPlane).
+			// Nếu chỉ ghi đè pitch, autopilot vẫn nghiêng cánh về điểm ngắm cũ đã tụt ra sau
+			// lưng → máy bay lăn liên tục khi kéo vòng.
+			this.manualOverride = Math.abs(sp) > 0.25 || Math.abs(sr) > 0.25
+			if (!this.manualOverride) {
+				const a = this.ap.update(raw.aimDir, s, c, dt)
+				pitch = a.pitch
+				roll = a.roll
+				yaw = Math.abs(sy) > 0.25 ? sy : a.yaw
+			}
 		} else if (this.mode === 'standard') {
-			// A/D đặt góc nghiêng mục tiêu, pitch tự bù để giữ độ cao khi quay
+			// A/D đặt góc nghiêng mục tiêu, pitch tự bù để giữ độ cao khi quay.
+			// Tạm tắt trợ lực khi mũi gần thẳng đứng hoặc đang giữ cần mà bụng đã lên trời
+			// (lộn vòng): lúc đó bank nhảy ±180° và trợ lực sẽ lật máy bay lại giữa vòng.
 			const nearVertical = Math.abs(fwd.y) > 0.75
+			const looping = Math.abs(sp) > 0.25 && Math.abs(bank) > 90 * D2R
+			const assist = !nearVertical && !looping
 			const phiT = sr * c.assist.maxBankStandard * D2R
-			roll = nearVertical ? 0 : clamp((phiT - bank) * 2.0, -1, 1)
+			roll = assist ? clamp((phiT - bank) * 2.0, -1, 1) : sr
 			const phiC = clamp(bank, -80 * D2R, 80 * D2R)
 			const qNeed = (G * Math.sin(phiC) * Math.tan(phiC)) / Math.max(s.speed, 1)
 			const pMax = evalCurve(c.rates.pitch, s.speed) * D2R
-			pitch = clamp(sp + (nearVertical ? 0 : qNeed / pMax), -1, 1)
+			pitch = clamp(sp + (assist ? qNeed / pMax : 0), -1, 1)
 			yaw = sy + sr * 0.15
 		} else {
 			if (Math.abs(sr) < 0.05 && Math.abs(bank) < 60 * D2R && Math.abs(fwd.y) < 0.7)
